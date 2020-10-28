@@ -12,7 +12,7 @@ import csv
 import math
 #sys.path.append('myScripts/') #python 2.7 ?
 #from mpa_configurations import * # python 2.7 ?
-from myScripts.mpa_configurations import *
+from mpa_configurations import *
 import os.path
 import glob
 import re
@@ -454,62 +454,28 @@ def Plot_Module(inpath="./",mapsa="MaPSA",base="pixelalive",modules=["chip1","ch
 
 def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="",modules=["chip1","chip2","chip3","chip4","chip5","chip6","chip7","chip8","chip9","chip10","chip11","chip12","chip13","chip14","chip15","chip16"], show_plot=True, save_plot=True):
     #print("MakeAllPlotsOneModule(",inpath,mapsa,mapsaname,",".join(modules),show_plot,save_plot,")")
-    bases = ["BumpBonding_BadBumpVCal3","BumpBonding_BadBumpMap","BumpBondingv2_BadBumpMap","BumpBonding_Noise_BadBump","BumpBondingv2_Noise_BadBump","mask_test","pixelalive","PostTrim_CAL_CAL","PostTrim_THR_THR","PostTrim_CAL_CAL","PostTrim_THR_THR"]
-    label = ["Bad Bump Test (through noise at BV = 0)","Bad Bump Test (through noise at BV = 0)","Bad Bump Test (through noise at BV = -10 V)","Identified abnormal pixel noise (at BV = 0)","Identified abnormal pixel noise (at BV = -10 V)","Pixel masking test","Pixel alive test","mean of CAL S Curve (post trimming)","mean of THR S Curve (post trimming)","rms of CAL S Curve (post trimming)","rms of THR S Curve (post trimming)"]
-    zlabel = ["is bad bump","is bad bump","is bad bump","noise [CAL] (at BV = 0)","noise [CAL] (at BV = -10 V)","is maskeable","recorded pulses","mean [CAL]","mean [THR]","rms [CAL]","rms [THR]"]
-    isscurves = [False,False,False,False,False,False,False, True, True, True, True]
-    THR   =     ["",   "",   "",   "",   "",   "",   "",   "CAL","THR","CAL","THR"]
-    doMeans =   [ True, True, True, True, True, True, True, True, True,False,False]
-    Averaged =  [False,False,False,False,False,False,False, True, True, True, True]
+    bases = ["BumpBonding_BadBumpVCal3","BumpBonding_BadBumpMap","BumpBonding_Noise_BadBump","mask_test","pixelalive","PostTrim_CAL_CAL_Mean","PostTrim_THR_THR_Mean","PostTrim_CAL_CAL_RMS","PostTrim_THR_THR_RMS"]
+    label = ["Bad Bump Test (through noise at BV = -2V)","Bad Bump Test (through noise at BV = -2V)","Identified abnormal pixel noise (at BV = -2V)","Pixel masking test","Pixel alive test","mean of CAL S Curve (post trimming)","mean of THR S Curve (post trimming)","rms of CAL S Curve (post trimming)","rms of THR S Curve (post trimming)"]
+    zlabel = ["is bad bump","is bad bump","noise [CAL] (at BV = -2V)","is maskeable","recorded pulses","mean [CAL]","mean [THR]","rms [CAL]","rms [THR]"]
+    isscurves = [False,False,False,False,False,False,False,False,False]
+    THR   =     ["",   "",   "",   "",   "",   "",   "",   "",   ""   ]
+    doMeans =   [ True, True, True, True, True, True, True, True, True]
+    Averaged =  [False,False,False,False,False, True, True, True, True]
     #print(mapsa)
     if mapsaname=="": mapsaname = mapsa
     for i in range(len(bases)):
         #if i > 1: continue
         mybase = bases[i]
-        if "PostTrim" in bases[i]:
-            if doMeans[i]: mybase += "_Mean"
-            else:          mybase += "_RMS"
+        #if "PostTrim" in bases[i]:
+        #    if doMeans[i]: mybase += "_Mean"
+        #    else:          mybase += "_RMS"
         mymax = -1
-        if "_Noise_" in bases[i]: mymax = 33.
-        if "v2_Noise_" in bases[i]: mymax = 8.
-        if "BadBumpsThrougNoise" in bases[i]: mymax = 1.
+        if "Noise_BadBump" in bases[i]: mymax = 10.
+        elif "_Noise_" in bases[i]: mymax = 30.
+        elif "BadBump" in bases[i]: mymax = 1.
         outpath = inpath
         if outpath[-1] != '/': outpath = outpath + '/'
         Plot_Module(inpath=inpath,mapsa=mapsa,base=bases[i],modules=modules,isscurve=isscurves[i],s_type=THR[i],doMean=doMeans[i],data_label=zlabel[i],test_label=label[i],identifier=mapsaname,filename=outpath+mapsa+"_"+mybase,plotAverage=Averaged[i],hmax=mymax,show_plot=show_plot,save_plot=save_plot)
-
-#helper function - probably we should find a smarter way to do this - maybe remove date ID from data somehow - but how to avoid overwriting results?
-def PlotAllPlotsOneModule(modulename, show_plot=True, save_plot=True):
-    #print("PlotAllPlotsOneModule(",modulename,show_plot,save_plot,")")
-    modulepath = ""
-    moduleid   = ""
-    chipnames  = ['','','','','','','','','','','','','','','','']
-    if modulename == "AEMTec2":
-        modulepath = "AEMTec2/"
-        moduleid = "mpa_test_AEMTec2"
-        chipnames = ["Chip1_2020_03_19_16_50_53","Chip2_2020_03_19_15_32_02","Chip3_2020_03_19_16_39_44","Chip4_2020_03_19_15_10_25","Chip5_2020_03_19_15_48_44","Chip6_2020_03_19_16_30_22","Chip7_2020_03_19_16_10_32","Chip8_2020_03_19_16_20_44","Chip9_2020_03_20_10_36_25","Chip10_2020_03_20_10_49_23","Chip11_2020_03_20_11_02_54","Chip12_2020_03_20_11_21_00","Chip13_2020_03_20_11_44_37","Chip14_2020_03_20_12_01_13","Chip15_2020_03_20_12_14_48","Chip16_2020_03_20_12_35_05"]
-    elif modulename == "AEMTec8":
-        modulepath = "AEMTec8/"
-        moduleid = "mpa_test_AEMTec8"
-        chipnames = ["Chip1_2020_06_11_14_07_03","Chip2_2020_06_11_14_19_16","Chip3_2020_06_11_14_30_59","Chip4_2020_06_11_14_40_34","Chip5_2020_06_11_14_51_31","Chip6_2020_06_11_15_03_15","Chip7_2020_06_11_17_46_30","Chip8_2020_06_11_15_24_48","Chip9_2020_06_11_15_48_35","Chip10_2020_06_11_15_58_12","Chip11_2020_06_11_16_13_54","Chip12_2020_06_11_16_22_05","Chip13_2020_06_11_16_29_37","Chip14_2020_06_11_16_37_08","Chip15_2020_06_11_16_49_59","Chip16_2020_06_11_17_07_15"]
-    elif modulename == "HPK19_1":
-        modulepath = "mpa_test_HPK19_1/"
-        moduleid = "mpa_test_HPK19_1"
-        chipnames = ["Chip1_2020_03_17_13_26_46","Chip2_2020_03_17_11_41_37","Chip3_2020_03_17_13_48_00","Chip4_2020_03_17_14_01_11","Chip5_2020_03_17_14_26_24","Chip6_2020_03_17_14_41_46","Chip7_2020_03_17_14_52_11","Chip8_2020_03_17_15_03_11","Chip9_2020_03_17_16_18_39","Chip10_2020_03_17_16_33_46","Chip11_2020_03_17_16_49_04","Chip12_dummy","Chip13_2020_03_17_17_19_23","Chip14_2020_03_17_17_29_59","Chip15_2020_03_17_17_40_15","Chip16_2020_03_17_17_51_05"]
-    elif modulename == "HPK25_2":
-        modulepath = "HPK25_2/"
-        moduleid = "mpa_test_HPK25_2"
-        chipnames = ["Chip1_2020_03_18_14_51_12","Chip2_2020_03_18_15_07_13","Chip3_2020_03_18_15_20_39","Chip4_2020_03_18_15_32_46","Chip5_2020_03_18_15_55_58","Chip6_2020_03_18_16_07_30","Chip7_2020_03_18_16_27_31","Chip8_2020_03_18_16_49_48","Chip9_2020_03_19_13_20_24","Chip10_2020_03_19_13_41_46","Chip11_2020_03_19_13_58_09","Chip12_2020_03_19_14_07_48","Chip13_2020_03_19_14_18_03","Chip14_2020_03_19_14_27_47","Chip15_2020_03_19_14_37_35","Chip16_2020_03_19_14_46_56"]
-    elif modulename == "HPK26_1":
-        modulepath = "HPK26_1/"
-        moduleid = "mpa_test_HPK26_1"
-        chipnames = ["Chip1_2020_06_04_09_27_55", "Chip2_2020_06_04_09_45_22", "Chip3_2020_06_04_09_58_07", "Chip4_2020_06_04_10_12_45", "Chip5_2020_06_04_10_23_25", "Chip6_2020_06_04_10_37_55", "Chip7_2020_06_04_10_48_49", "Chip8_2020_06_04_11_07_35", "Chip9_2020_06_04_11_29_01", "Chip10_2020_06_04_11_41_15", "Chip11_2020_06_04_11_55_10", "Chip12_2020_06_04_12_05_51", "Chip13_2020_06_04_12_18_49", "Chip14_2020_06_04_12_31_10", "Chip15_2020_06_04_12_43_03", "Chip16_2020_06_04_12_56_13"]
-    elif modulename == "HPK26_2":
-        modulepath = "HPK26_2/"
-        moduleid = "mpa_test_HPK26_2"
-        chipnames = ["Chip1_2020_06_08_10_16_33", "Chip2_2020_06_08_10_31_21", "Chip3_2020_06_08_10_46_49", "Chip4_2020_06_08_10_56_32", "Chip5_2020_06_08_11_08_53", "Chip6_2020_06_08_11_19_36", "Chip7_2020_06_08_11_32_56", "Chip8_2020_06_08_11_43_44", "Chip9_2020_06_08_12_04_16", "Chip10_2020_06_08_12_26_05", "Chip11_2020_06_08_12_39_13", "Chip12_2020_06_08_12_51_10", "Chip13_2020_06_08_13_01_27", "Chip14_2020_06_08_13_11_58", "Chip15_2020_06_08_13_30_13", "Chip16_2020_06_08_13_40_07"]
-    else:
-        print("Module "+modulename+" has not been recognized.")
-    MakeAllPlotsOneModule(inpath="../Results_MPATesting/"+modulepath,mapsa=moduleid,mapsaname=modulename,modules=chipnames, show_plot=show_plot, save_plot=save_plot)
 
 def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
     moduleid = "mpa_test_"+modulename
@@ -524,6 +490,7 @@ def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
         maxstr = "" #string with highest number
         maxnbr = 0
         for f in filelist:
+            if "BumpBondingAtBV" in f: continue
             numbers_from_string = filter(str.isdigit, f)
             if numbers_from_string > maxnbr:
                 maxnbr = numbers_from_string
@@ -545,6 +512,12 @@ def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
     #print(chipnames)
     MakeAllPlotsOneModule(inpath=thepath,mapsa=moduleid,mapsaname=modulename,modules=chipnames, show_plot=show_plot, save_plot=save_plot)
 
+def PlotAllPlotsModulesAutomated(show_plot=True, save_plot=True):
+    if len(sys.argv)<2:
+        print("Give at least one MaPSA name to allow plotting.")
+    for i in range(1,len(sys.argv)):
+        PlotAllPlotsOneModuleAutomated(sys.argv[i],show_plot=show_plot, save_plot=save_plot)
+
 def PlotAllPlotsAllModule(show_plot=True, save_plot=True):
     #print("PlotAllPlotsAllModule(",show_plot,save_plot,")")
     modulenames = ["AEMTec2","HPK19_1","HPK25_2","HPK26_1","HPK26_2"]
@@ -556,70 +529,8 @@ def PlotAllPlotsAllModule(show_plot=True, save_plot=True):
 #PlotAllPlotsOneModule("HPK25_2",show_plot=False,save_plot=True)
 
 #PlotAllPlotsAllModule(show_plot=True,save_plot=True)
-PlotAllPlotsOneModuleAutomated("AEMTec2",show_plot=False,save_plot=True)
-#PlotAllPlotsOneModuleAutomated("HPK18_1",show_plot=False,save_plot=True)
-"""
-#for testing main function
-module1="AEMTec2/"
-module2="mpa_test_AEMTec2"
-chips=["Chip1_2020_03_19_16_50_53","Chip2_2020_03_19_15_32_02","Chip3_2020_03_19_16_39_44","Chip4_2020_03_19_15_10_25","Chip5_2020_03_19_15_48_44","Chip6_2020_03_19_16_30_22","Chip7_2020_03_19_16_10_32","Chip8_2020_03_19_16_20_44","Chip9_2020_03_20_10_36_25","Chip10_2020_03_20_10_49_23","Chip11_2020_03_20_11_02_54","Chip12_2020_03_20_11_21_00","Chip13_2020_03_20_11_44_37","Chip14_2020_03_20_12_01_13","Chip15_2020_03_20_12_14_48","Chip16_2020_03_20_12_35_05"]
-mapsaname = "AEMTec2"
-base_ = "mask_test"
-name_ = "Masking test"
-zlabel_ = "maskable"
-#base_ = "pixelalive"
-#base_ = "PostTrim_CAL_CAL"
-isscurve_=False
-s_type_ = "THR"
-doMean_ = True
-hmin=-1
-hmax=-1
-#hmin=0
-#hmax=45
-
-#Plot_Module(inpath="../../probestationresults/MaPSATesting/"+module1,mapsa=module2,base=base_,modules=chips,isscurve=isscurve_,s_type=s_type_,doMean=doMean_,hmax=hmax,hmin=hmin,identifier=mapsaname,data_label=zlabel_,test_label=name_,filename=module2+"_"+base_)
-"""
-
-"""
-#for testing fit function with differentiation
-meanTdiff = []
-meanCdiff = []
-meanTdiffx = []
-meanCdiffx = []
-a,b,c = 0,0,0
-d,e,f = 0,0,0
-for i in range(len(meansfT)):
-    if meansfT[i]!=0:
-        meanTdiff.append((meansdT[i]-meansfT[i])/meansfT[i])
-        if abs((meansdT[i]-meansfT[i])/meansfT[i])<0.2: meanTdiffx.append((meansdT[i]-meansfT[i])/meansfT[i])
-        a+=1
-    elif meansdT[i]!=0:
-        b+=1
-        meanTdiff.append((meansdT[i]-meansfT[i])/meansdT[i])
-    else:
-        #meanTdiff.append(0)
-        c+=1
-for i in range(len(meansfC)):
-    if meansfC[i]!=0:
-        meanCdiff.append((meansdC[i]-meansfC[i])/meansfC[i])
-        if abs((meansdC[i]-meansfC[i])/meansfC[i])<0.2: meanCdiffx.append((meansdC[i]-meansfC[i])/meansfC[i])
-        d+=1
-    elif meansdT[i]!=0:
-        meanCdiff.append((meansdC[i]-meansfC[i])/meansdC[i])
-        e+=1
-    else:
-        #meanCdiff.append(0)
-        f+=1
-meanTdiff = np.array(meanTdiff)
-meanCdiff = np.array(meanCdiff)
-print("Relative difference to get Threshold mean ",np.mean(meanTdiff)," +/- ", np.std(meanTdiff))
-print("Relative difference to get Cal mean ",np.mean(meanCdiff)," +/- ", np.std(meanCdiff))
-print(a,b,c,d,e,f)
-fig, axs = plt.subplots(2, 2, sharey=True, tight_layout=True)
-n_bins = 100
-axs[0][0].hist(meanTdiff, bins=n_bins)
-axs[1][0].hist(meanCdiff, bins=n_bins)
-axs[0][1].hist(meanTdiffx, bins=n_bins)
-axs[1][1].hist(meanCdiffx, bins=n_bins)
-plt.show()
-"""
+#PlotAllPlotsOneModuleAutomated("AEMTec2",show_plot=False,save_plot=True)
+#PlotAllPlotsOneModuleAutomated("HPK31_1",show_plot=False,save_plot=True)
+#PlotAllPlotsOneModuleAutomated("QuikPak_PS-p-P2",show_plot=False,save_plot=True)
+#PlotAllPlotsOneModuleAutomated("QuikPak_PS-p-P1",show_plot=False,save_plot=True)
+PlotAllPlotsModulesAutomated(show_plot=False, save_plot=True)
