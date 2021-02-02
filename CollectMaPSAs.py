@@ -1,7 +1,8 @@
 import argparse
 import sys, os
 import csv
-import pickle as pkl
+#import pickle as pkl
+import cPickle
 
 def get_recent(cmd):
 
@@ -158,12 +159,14 @@ class MaPSA:
         self.directory = '/uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/' + name + '/'
         self.mpa_chips = []
 
-    def add_mpa(mpa):
+    def add_mpa(self, mpa):
         if(len(self.mpa_chips) >= 16):
             print("Error: MaPSA already has 16 associated MPAs")
             return
 
         self.mpa_chips += [mpa]
+        print("Constructed " + self.name + " Chip " + str(len(self.mpa_chips)))
+
         return
 
 def main():
@@ -189,9 +192,12 @@ def main():
 
         for i in range(1,17):
             chip = MPA(m,i)
-            print(chip.I_dig)
+            new_mapsa.add_mpa(chip)
 
-        pkl.dump(new_mapsa,open('pickles/'+m+'.pkl','wb'))
+        print("Pickling MaPSA " + m)
+        mapsafile = open('pickles/'+m+'.pkl', 'wb')
+        cPickle.dump(new_mapsa, mapsafile, protocol=-1)
+        mapsafile.close()
 
 if __name__ == "__main__":
     main()
