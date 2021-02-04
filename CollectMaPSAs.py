@@ -151,7 +151,7 @@ class MPA:
                     df['I2C']['1.2V'] = float(row[0])
                     df['missing']['1.2V'] = float(row[0])
 
-        df = df.fillna(value=-1)
+        df = df.fillna(value=-2)
 
         self.memerrs = df
         return
@@ -404,14 +404,14 @@ def MPA_memory(mapsas, outdir):
 
     fig, ax = plt.subplots(2,4, sharey=True)
 #    fig3.suptitle(str(len(mapsas)) + " MaPSAs, " + str(nchips) + " MPAs")
-    ax[0,0].hist(error1,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,0].set(xlabel="error (1.0V)",xlim=[-2,5],ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[0,1].hist(stuck1,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,1].set(xlabel="stuck (1.0V)",xlim=[-2,5],yscale='log',ylim=[0.1,1000])
-    ax[0,2].hist(i2c1,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,2].set(xlabel="I2C (1.0V)",xlim=[-2,5],yscale='log',ylim=[0.1,1000])
-    ax[0,3].hist(miss1,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,3].set(xlabel="missing (1.0V)",xlim=[-2,5],yscale='log',ylim=[0.1,1000])
+    ax[0,0].hist(error1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,0].set(xlabel="error (1.0V)",xlim=[-3,5],ylabel="MPAs",yscale='log',ylim=[0.1,1000])
+    ax[0,1].hist(stuck1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,1].set(xlabel="stuck (1.0V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
+    ax[0,2].hist(i2c1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,2].set(xlabel="I2C (1.0V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
+    ax[0,3].hist(miss1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,3].set(xlabel="missing (1.0V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
 
     error2 = []
     stuck2 = []
@@ -424,14 +424,14 @@ def MPA_memory(mapsas, outdir):
         i2c2   += [chip.memerrs["I2C"]["1.2V"] for chip in m.mpa_chips]
         miss2  += [chip.memerrs["missing"]["1.2V"] for chip in m.mpa_chips]
 
-    ax[1,0].hist(error2,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,0].set(xlabel="error (1.2V)",xlim=[-2,5],ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[1,1].hist(stuck2,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,1].set(xlabel="stuck (1.2V)",xlim=[-2,5],yscale='log',ylim=[0.1,1000])
-    ax[1,2].hist(i2c2,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,2].set(xlabel="I2C (1.2V)",xlim=[-2,5],yscale='log',ylim=[0.1,1000])
-    ax[1,3].hist(miss2,bins=[-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,3].set(xlabel="missing (1.2V)",xlim=[-2,5],yscale='log',ylim=[0.1,1000])
+    ax[1,0].hist(error2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,0].set(xlabel="error (1.2V)",xlim=[-3,5],ylabel="MPAs",yscale='log',ylim=[0.1,1000])
+    ax[1,1].hist(stuck2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,1].set(xlabel="stuck (1.2V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
+    ax[1,2].hist(i2c2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,2].set(xlabel="I2C (1.2V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
+    ax[1,3].hist(miss2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,3].set(xlabel="missing (1.2V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
 
     plt.tight_layout()
 #    plt.show()
@@ -454,11 +454,11 @@ def pixel_plots(mapsas, outdir):
     npix = len(allpix["pa"])
 
     fig1 = plt.gcf()
-    plt.hist(allpix["pa"],bins=[-50,50,150],histtype='step')
+    plt.hist(allpix["pa"],bins=np.linspace(-20,220,12),histtype='step')
     plt.xlabel("alive")
     plt.ylabel("Pixels")
     plt.yscale('log')
-    plt.ylim([1,1000000])
+    plt.ylim([0.1,1000000])
     plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " pixels")
 #    plt.show()
     fig1.savefig(outdir+"/pa.png",bbox_inches='tight')
@@ -472,7 +472,7 @@ def pixel_plots(mapsas, outdir):
     plt.xlabel("mask")
     plt.ylabel("Pixels")
     plt.yscale('log')
-    plt.ylim([1,1000000])
+    plt.ylim([0.1,1000000])
     plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
 #    plt.show()
     fig2.savefig(outdir+"/mask.png",bbox_inches='tight')
