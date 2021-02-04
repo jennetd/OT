@@ -512,11 +512,9 @@ def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
     #print(chipnames)
     MakeAllPlotsOneModule(inpath=thepath,mapsa=moduleid,mapsaname=modulename,modules=chipnames, show_plot=show_plot, save_plot=save_plot)
 
-def PlotAllPlotsModulesAutomated(show_plot=True, save_plot=True):
-    if len(sys.argv)<2:
-        print("Give at least one MaPSA name to allow plotting.")
-    for i in range(1,len(sys.argv)):
-        PlotAllPlotsOneModuleAutomated(sys.argv[i],show_plot=show_plot, save_plot=save_plot)
+def PlotAllPlotsModulesAutomated(name, show_plot=True, save_plot=True):
+    PlotAllPlotsOneModuleAutomated(name,show_plot=show_plot, save_plot=save_plot)
+    return
 
 def PlotAllPlotsAllModule(show_plot=True, save_plot=True):
     #print("PlotAllPlotsAllModule(",show_plot,save_plot,")")
@@ -533,4 +531,4 @@ def PlotAllPlotsAllModule(show_plot=True, save_plot=True):
 #PlotAllPlotsOneModuleAutomated("HPK31_1",show_plot=False,save_plot=True)
 #PlotAllPlotsOneModuleAutomated("QuikPak_PS-p-P2",show_plot=False,save_plot=True)
 #PlotAllPlotsOneModuleAutomated("QuikPak_PS-p-P1",show_plot=False,save_plot=True)
-PlotAllPlotsModulesAutomated(show_plot=False, save_plot=True)
+#PlotAllPlotsModulesAutomated(show_plot=False, save_plot=True)
