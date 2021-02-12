@@ -4,12 +4,11 @@ import csv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-#import mplhep as hep
-#plt.style.use([hep.style.ROOT])
 
 import cPickle
-
 import MakeModulePlots
+
+badchips = ["HPK34_1-1","HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14","QP_no13-10"]
 
 def get_recent(cmd):
 
@@ -18,6 +17,8 @@ def get_recent(cmd):
     if len(files) < 1:
         print("Error: no files specified")
         return "0"
+
+    # to be added: if a file contains "skipped test" then remove it from the list
 
     elif len(files) == 1:
         return files[0]
@@ -48,7 +49,7 @@ class MPA:
 
         self.fill_pixels()
 
-#        self.set_Scurves()
+        self.set_Scurves()
 
     def set_currents(self):
 
@@ -162,81 +163,88 @@ class MPA:
         self.pixels = pd.read_csv(get_recent(cmd),index_col=0)
         self.pixels.columns = ['pa']
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
-        self.pixels['CAL_Mean'] = tmp['value']
-
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
         self.pixels['CAL_RMS'] = tmp['value']
+        self.pixels['CAL_RMS'][abs(self.pixels['CAL_RMS']-2.0)<0.000001] = -1
+        self.pixels['CAL_RMS'][self.pixels['pa']<100] = 0
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
-        self.pixels['THR_Mean'] = tmp['value']
+        self.pixels['CAL_Mean'] = tmp['value']
+        self.pixels['CAL_Mean'][self.pixels['CAL_RMS']<0] = np.nan
+        self.pixels['CAL_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
         self.pixels['THR_RMS'] = tmp['value']
+        self.pixels['THR_RMS'][abs(self.pixels['THR_RMS']-2.0)<0.000001] = -1
+        self.pixels['THR_RMS'][self.pixels['pa']<100] = 0
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
-        self.pixels['CAL_Mean_pretrim'] = tmp['value']
+        self.pixels['THR_Mean'] = tmp['value']
+        self.pixels['THR_Mean'][self.pixels['THR_RMS']<0] = np.nan
+        self.pixels['THR_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
         self.pixels['CAL_RMS_pretrim'] = tmp['value']
+        self.pixels['CAL_RMS_pretrim'][abs(self.pixels['CAL_RMS_pretrim']-2.0)<0.00001] = -1
+        self.pixels['CAL_RMS_pretrim'][self.pixels['pa']<100] = 0
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
-        self.pixels['THR_Mean_pretrim'] = tmp['value']
+        self.pixels['CAL_Mean_pretrim'] = tmp['value']
+        self.pixels['CAL_Mean_pretrim'][self.pixels['CAL_RMS_pretrim']<0] = np.nan
+        self.pixels['CAL_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
         self.pixels['THR_RMS_pretrim'] = tmp['value']
+        self.pixels['THR_RMS_pretrim'][abs(self.pixels['THR_RMS_pretrim']-2.0)<0.000001] = -1
+        self.pixels['THR_RMS_pretrim'][self.pixels['pa']<100] = 0
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
-        self.pixels['Bump_Mean'] = tmp['value']
+        self.pixels['THR_Mean_pretrim'] = tmp['value']
+        self.pixels['THR_Mean_pretrim'][self.pixels['THR_RMS_pretrim']<0] = np.nan
+        self.pixels['THR_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Noise_BadBump.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
         self.pixels['Bump_RMS'] = tmp['value']
+        self.pixels['Bump_RMS'][abs(self.pixels['Bump_RMS']-2.0)<0.000001] = -1
+        self.pixels['Bump_RMS'][self.pixels['pa']<100] = 0
+
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        self.pixels['Bump_Mean'] = tmp['value']
+        self.pixels['Bump_Mean'][self.pixels['Bump_RMS']<0] = np.nan
+        self.pixels['Bump_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
         self.pixels['mask'] = tmp['value']
+        self.pixels['mask'][self.pixels['pa']<100] = -1
 
         return
 
     # S curves
-    def read_Scurves(self, cmd):
-        csvfilename = get_recent(cmd)
-        values = []
-        with open(csvfilename, 'r') as f:
-            reader = csv.reader(f, delimiter=',')
-            for row in reader:
-                if row[0] == '':
-                    continue
-                pixedid = int(row[0])
-                value = [float(i) for i in row]
-                value.pop(0)
-                values.append(value)
-        return values
-
     def set_Scurves(self):
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_CAL_CAL.csv'
-        self.CALS = self.read_Scurves(cmd)
+        self.CALS = pd.read_csv(get_recent(cmd))
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_THR_THR.csv'
-        self.THRS = self.read_Scurves(cmd)
+        self.THRS = pd.read_csv(get_recent(cmd))
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_CAL_CAL.csv'
-        self.CALS_pretrim = self.read_Scurves(cmd)
+        self.CALS_pretrim = pd.read_csv(get_recent(cmd))
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_THR_THR.csv'
-        self.THRS_pretrim = self.read_Scurves(cmd)
+        self.THRS_pretrim = pd.read_csv(get_recent(cmd))
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_BumpBonding_SCurve_BadBump.csv'
-        self.BumpS = self.read_Scurves(cmd)
+        self.BumpS = pd.read_csv(get_recent(cmd))
         
         return
 
@@ -298,15 +306,16 @@ class MaPSA:
         return 
 
 def MaPSA_IV(mapsas, outdir):
-    # print entries -- number of mapsas
 
     print("Processing " + str(len(mapsas)) + " MaPSAs for IV plot")
 
     fig, ax = plt.subplots()
     for m in mapsas:
         ax.plot(m.IV["V"],m.IV["I"])
-#    ax.legend([m.name for m in mapsas])
-    ax.set(xlabel="V [V]", ylabel="I [uA]",ylim=[-5,1])
+#    ax.legend([m.name for m in mapsas],frameon=False)
+    ax.set_xlabel("V [V]",fontweight='bold')
+    ax.set_ylabel("I [uA]",fontweight='bold')
+    ax.set_ylim(-5,1)
 
     plt.tight_layout()
 #    plt.show()
@@ -317,268 +326,594 @@ def MaPSA_IV(mapsas, outdir):
 
     return
 
-def MPA_currents(mapsas, outdir):
+def MPA_currents(mapsas, outdir, log=True):
 
     print("Processing " + str(len(mapsas)) + " MaPSAs for current plots")
 
-    I_ana = []
-    I_dig = []
-    I_pad = []
-    I_tot = []
+    I_ana_good = []
+    I_dig_good = []
+    I_pad_good = []
+    I_tot_good = []
 
-    nchips = 0
+    I_ana_bad = []
+    I_dig_bad = []
+    I_pad_bad = []
+    I_tot_bad = []
+
+    nchips_good = 0
+    nchips_bad = 0
     for m in mapsas:
-        I_ana += [chip.I_ana for chip in m.mpa_chips]
-        I_dig += [chip.I_dig for chip in m.mpa_chips]
-        I_pad += [chip.I_pad for chip in m.mpa_chips]
-        I_tot += [chip.I_tot for chip in m.mpa_chips]
-        nchips += len(m.mpa_chips)
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) in badchips:
+                I_ana_bad += [chip.I_ana]
+                I_dig_bad += [chip.I_dig]
+                I_pad_bad += [chip.I_pad]
+                I_tot_bad += [chip.I_tot]
+                nchips_bad += 1
+            else:
+                I_ana_good += [chip.I_ana]
+                I_dig_good += [chip.I_dig]
+                I_pad_good += [chip.I_pad]
+                I_tot_good += [chip.I_tot]
+                nchips_good += 1
 
-    fig, ax = plt.subplots(2,2)
-#    fig1.suptitle(str(len(mapsas)) + " MaPSAs, " + str(nchips) + " MPAs")
-    ax[0,0].hist(I_ana,bins=np.linspace(-10,100,20),histtype='step')
-    ax[0,0].set(xlabel="I_ana [uA]",ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[1,0].hist(I_dig,bins=np.linspace(-10,200,20),histtype='step')
-    ax[1,0].set(xlabel="I_dig [uA]",ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[0,1].hist(I_pad,bins=np.linspace(-10,50,20),histtype='step')
-    ax[0,1].set(xlabel="I_pad [uA]",ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[1,1].hist(I_tot,bins=np.linspace(-10,300,20),histtype='step')
-    ax[1,1].set(xlabel="I_tot [uA]",ylabel="MPAs",yscale='log',ylim=[0.1,1000])
+    fig1, ax1 = plt.subplots()
+    plt.hist(I_ana_good,bins=np.linspace(-10,100,20),histtype='step')
+    plt.hist(I_ana_bad,bins=np.linspace(-10,100,20),histtype='step')
+    ax1.set_xlabel("I_ana [uA]",fontweight='bold')
+    ax1.set_ylabel("MPAs",fontweight='bold')
+    if log:
+        ax1.set(yscale='log',ylim=[0.1,1000])
 
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
-#    plt.show()
+ #   plt.show()
 
-    plt.savefig(outdir+"/Current.png",bbox_inches='tight')
-    plt.savefig(outdir+"/Current.pdf",bbox_inches='tight')
+    if log:
+        plt.savefig(outdir+"/I_ana_log.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_ana_log.pdf",bbox_inches='tight')
+    else:
+        plt.savefig(outdir+"/I_ana.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_ana.pdf",bbox_inches='tight')
+
+    plt.clf()
+
+    fig2, ax2 = plt.subplots()
+    plt.hist(I_dig_good,bins=np.linspace(-10,200,20),histtype='step')
+    plt.hist(I_dig_bad,bins=np.linspace(-10,200,20),histtype='step')
+    ax2.set_xlabel("I_dig [uA]",fontweight='bold')
+    ax2.set_ylabel("MPAs",fontweight='bold')
+    if log:
+        ax2.set(yscale='log',ylim=[0.1,1000])
+
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
+ #   plt.show()
+
+    if log:
+        plt.savefig(outdir+"/I_dig_log.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_dig_log.pdf",bbox_inches='tight')
+    else:
+        plt.savefig(outdir+"/I_dig.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_dig.pdf",bbox_inches='tight')
+
+    plt.clf()
+
+    fig3, ax3 = plt.subplots()
+    plt.hist(I_pad_good,bins=np.linspace(-10,50,20),histtype='step')
+    plt.hist(I_pad_bad,bins=np.linspace(-10,50,20),histtype='step')
+    ax3.set_xlabel("I_pad [uA]",fontweight='bold')
+    ax3.set_ylabel("MPAs",fontweight='bold')
+    if log:
+        ax3.set(yscale='log',ylim=[0.1,1000])
+
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
+ #   plt.show()
+
+    if log:
+        plt.savefig(outdir+"/I_pad_log.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_pad_log.pdf",bbox_inches='tight')
+    else:
+        plt.savefig(outdir+"/I_pad.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_pad.pdf",bbox_inches='tight')
+        
+    plt.clf()
+
+    fig4, ax4 = plt.subplots()
+    plt.hist(I_tot_good,bins=np.linspace(-10,300,20),histtype='step')
+    plt.hist(I_tot_bad,bins=np.linspace(-10,300,20),histtype='step')
+    ax4.set_xlabel("I_tot [uA]",fontweight='bold')
+    ax4.set_ylabel("MPAs",fontweight='bold')
+    if log:
+        ax4.set(yscale='log',ylim=[0.1,1000])
+
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
+ #   plt.show()
+
+    if log:
+        plt.savefig(outdir+"/I_tot_log.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_tot_log.pdf",bbox_inches='tight')
+    else:
+        plt.savefig(outdir+"/I_tot.png",bbox_inches='tight')
+        plt.savefig(outdir+"/I_tot.pdf",bbox_inches='tight')
+
     plt.clf()
 
     return
 
-def MPA_registers(mapsas, outdir):
+def MPA_registers(mapsas, outdir, log=True):
+
     print("Processing " + str(len(mapsas)) + " MaPSAs register plots")
-    # print entries -- number of mapsas, number of mpas   
 
-    regerr_peri = []
-    regerr_row = []
-    regerr_pixel = []
+    regerr_peri_good = []
+    regerr_row_good = []
+    regerr_pixel_good = []
 
-    nchips = 0
+    regerr_peri_bad = []
+    regerr_row_bad = []
+    regerr_pixel_bad = []
+
+    nchips_good = 0
+    nchips_bad = 0
     for m in mapsas:
-        regerr_peri  += [chip.regerr_peri for chip in m.mpa_chips]
-        regerr_row   += [chip.regerr_row for chip in m.mpa_chips]
-        regerr_pixel += [chip.regerr_pixel for chip in m.mpa_chips]
-        nchips += len(m.mpa_chips)
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) in badchips:
+                regerr_peri_bad  += [chip.regerr_peri]
+                regerr_row_bad   += [chip.regerr_row]
+                regerr_pixel_bad += [chip.regerr_pixel]
+                nchips_bad += 1
+            else:
+                regerr_peri_good  += [chip.regerr_peri]
+                regerr_row_good   += [chip.regerr_row]
+                regerr_pixel_good += [chip.regerr_pixel]
+                nchips_good += 1
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1,3, sharey=True)
-    ax1.hist(regerr_peri,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
-    ax1.set(xlabel="Reg. Err. (Peri)",ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax2.hist(regerr_row,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
-    ax2.set(xlabel="Reg. Err. (Row)",yscale='log',ylim=[0.1,1000])
-    ax3.hist(regerr_pixel,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
-    ax3.set(xlabel="Reg. Err. (Pix)",yscale='log',ylim=[0.1,1000])
+    fig, (ax1,ax2,ax3) = plt.subplots(1,3,sharey=True,figsize=(7,5))
+    plt.subplots_adjust(wspace=0, hspace=0)
 
+    ax1.hist(regerr_peri_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax1.hist(regerr_peri_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax1.set_xlabel("Reg. Err. (Peri)",fontweight='bold')
+    ax1.set_ylabel("MPAs",fontweight='bold')
+
+    ax2.hist(regerr_row_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax2.hist(regerr_row_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax2.set_xlabel("Reg. Err. (Row)",fontweight='bold')
+
+    ax3.hist(regerr_pixel_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax3.hist(regerr_pixel_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax3.set_xlabel("Reg. Err. (Pix)",fontweight='bold')
+
+    if log:
+        ax1.set(yscale='log',ylim=[0.1,1000])
+        ax2.set(yscale='log',ylim=[0.1,1000])
+        ax3.set(yscale='log',ylim=[0.1,1000])
+
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
-    plt.savefig(outdir+"/Register.png",bbox_inches='tight')
-    plt.savefig(outdir+"/Register.pdf",bbox_inches='tight')
+    if log:
+        plt.savefig(outdir+"/Register_log.png",bbox_inches='tight')
+        plt.savefig(outdir+"/Register_log.pdf",bbox_inches='tight')
+    else:
+        plt.savefig(outdir+"/Register.png",bbox_inches='tight')
+        plt.savefig(outdir+"/Register.pdf",bbox_inches='tight')
+
     plt.clf()
 
     return
 
-def MPA_memory(mapsas, outdir):
+def MPA_memory(mapsas, outdir, log=True):
     print("Processing " + str(len(mapsas)) + " MaPSAs for memory plots")
 
-    error1 = []
-    stuck1 = []
-    i2c1 = []
-    miss1 = []
+    error1_good = []
+    stuck1_good = []
+    i2c1_good = []
+    miss1_good = []
 
-    nchips = 0
+    error1_bad = []
+    stuck1_bad = []
+    i2c1_bad = []
+    miss1_bad = []
+
+    nchips_good = 0
+    nchips_bad = 0
     for m in mapsas:
-        error1 += [chip.memerrs["error"]["1.0V"] for chip in m.mpa_chips]
-        stuck1 += [chip.memerrs["stuck"]["1.0V"] for chip in m.mpa_chips]
-        i2c1   += [chip.memerrs["I2C"]["1.0V"] for chip in m.mpa_chips]
-        miss1  += [chip.memerrs["missing"]["1.0V"] for chip in m.mpa_chips]
-        nchips += len(m.mpa_chips)
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) in badchips:
+                error1_bad += [chip.memerrs["error"]["1.0V"]]
+                stuck1_bad += [chip.memerrs["stuck"]["1.0V"]]
+                i2c1_bad   += [chip.memerrs["I2C"]["1.0V"]]
+                miss1_bad  += [chip.memerrs["missing"]["1.0V"]]
+                nchips_bad += 1
+            else:
+                error1_good += [chip.memerrs["error"]["1.0V"]]
+                stuck1_good += [chip.memerrs["stuck"]["1.0V"]]
+                i2c1_good   += [chip.memerrs["I2C"]["1.0V"]]
+                miss1_good  += [chip.memerrs["missing"]["1.0V"]]
+                nchips_good += 1
 
-    fig, ax = plt.subplots(2,4, sharey=True)
+    fig, ax = plt.subplots(2,4, sharex=True, sharey=True, figsize=(8,8))
+    plt.subplots_adjust(wspace=0, hspace=0)
 #    fig3.suptitle(str(len(mapsas)) + " MaPSAs, " + str(nchips) + " MPAs")
-    ax[0,0].hist(error1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,0].set(xlabel="error (1.0V)",xlim=[-3,5],ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[0,1].hist(stuck1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,1].set(xlabel="stuck (1.0V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
-    ax[0,2].hist(i2c1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,2].set(xlabel="I2C (1.0V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
-    ax[0,3].hist(miss1,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,3].set(xlabel="missing (1.0V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
 
-    error2 = []
-    stuck2 = []
-    i2c2 = []
-    miss2 = []
+    ax[0,0].hist(error1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,0].hist(error1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,0].set_ylabel("at 1.0 V",fontweight='bold')
+
+    ax[0,1].hist(stuck1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,1].hist(stuck1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+
+    ax[0,2].hist(i2c1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,2].hist(i2c1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+
+    ax[0,3].hist(miss1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,3].hist(miss1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+
+    error2_good = []
+    stuck2_good = []
+    i2c2_good = []
+    miss2_good = []
+
+    error2_bad = []
+    stuck2_bad = []
+    i2c2_bad = []
+    miss2_bad = []
 
     for m in mapsas:
-        error2 += [chip.memerrs["error"]["1.2V"] for chip in m.mpa_chips]
-        stuck2 += [chip.memerrs["stuck"]["1.2V"] for chip in m.mpa_chips]
-        i2c2   += [chip.memerrs["I2C"]["1.2V"] for chip in m.mpa_chips]
-        miss2  += [chip.memerrs["missing"]["1.2V"] for chip in m.mpa_chips]
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) in badchips:
+                error2_bad += [chip.memerrs["error"]["1.2V"]]
+                stuck2_bad += [chip.memerrs["stuck"]["1.2V"]]
+                i2c2_bad   += [chip.memerrs["I2C"]["1.2V"]]
+                miss2_bad  += [chip.memerrs["missing"]["1.2V"]]
+            else:
+                error2_good += [chip.memerrs["error"]["1.2V"]]
+                stuck2_good += [chip.memerrs["stuck"]["1.2V"]]
+                i2c2_good   += [chip.memerrs["I2C"]["1.2V"]]
+                miss2_good  += [chip.memerrs["missing"]["1.2V"]]
 
-    ax[1,0].hist(error2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,0].set(xlabel="error (1.2V)",xlim=[-3,5],ylabel="MPAs",yscale='log',ylim=[0.1,1000])
-    ax[1,1].hist(stuck2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,1].set(xlabel="stuck (1.2V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
-    ax[1,2].hist(i2c2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,2].set(xlabel="I2C (1.2V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
-    ax[1,3].hist(miss2,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,3].set(xlabel="missing (1.2V)",xlim=[-3,5],yscale='log',ylim=[0.1,1000])
+    ax[1,0].hist(error2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,0].hist(error2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,0].set_xlabel("error",fontweight='bold')
+    ax[1,0].set_ylabel("at 1.2 V",fontweight='bold')
 
+    ax[1,1].hist(stuck2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,1].hist(stuck2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,1].set_xlabel("stuck",fontweight='bold')
+
+    ax[1,2].hist(i2c2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,2].hist(i2c2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,2].set_xlabel("I2C",fontweight='bold')
+
+    ax[1,3].hist(miss2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,3].hist(miss2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,3].set_xlabel("missing",fontweight='bold')
+
+    for i in range(0,2):
+        for j in range(0,4):
+            ax[i,j].set(xlim=[-3,5])
+            if log:
+                ax[i,j].set(yscale='log',ylim=[0.1,1000])
+
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
-    plt.savefig(outdir+"/Memory.png",bbox_inches='tight')
-    plt.savefig(outdir+"/Memory.pdf",bbox_inches='tight')
+    if log:
+        plt.savefig(outdir+"/Memory_log.png",bbox_inches='tight')
+        plt.savefig(outdir+"/Memory_log.pdf",bbox_inches='tight')
+    else:
+        plt.savefig(outdir+"/Memory.png",bbox_inches='tight')
+        plt.savefig(outdir+"/Memory.pdf",bbox_inches='tight')
+
     plt.clf()
 
     return
 
-def pixel_plots(mapsas, outdir):
+def pixel_plots(mapsas, outdir, log=True):
 
     print("Processing " + str(len(mapsas)) + " MaPSAs for pixel plots")
 
     allpix = pd.DataFrame([])
+    allpix_bad = pd.DataFrame([])
     for m in mapsas:
         for chip in m.mpa_chips:
-            allpix = allpix.append(chip.pixels)
+            if chip.mapsa_name+"-"+str(chip.index) in badchips:
+                allpix_bad = allpix_bad.append(chip.pixels)
+            else:
+                allpix = allpix.append(chip.pixels)
 
     npix = len(allpix["pa"])
 
     fig1 = plt.gcf()
     plt.hist(allpix["pa"],bins=np.linspace(-20,220,12),histtype='step')
-    plt.xlabel("alive")
-    plt.ylabel("Pixels")
-    plt.yscale('log')
-    plt.ylim([0.1,1000000])
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " pixels")
+    plt.hist(allpix_bad["pa"],bins=np.linspace(-20,220,12),histtype='step')
+    plt.xlabel("alive",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig1.savefig(outdir+"/pa.png",bbox_inches='tight')
-    fig1.savefig(outdir+"/pa.pdf",bbox_inches='tight')
 
-    npix = len(allpix["pa"][allpix["pa"]>0])
+    if log:
+        fig1.savefig(outdir+"/pa_log.png",bbox_inches='tight')
+        fig1.savefig(outdir+"/pa_log.pdf",bbox_inches='tight')
+    else:
+        fig1.savefig(outdir+"/pa.png",bbox_inches='tight')
+        fig1.savefig(outdir+"/pa.pdf",bbox_inches='tight')
 
     plt.clf()
     fig2 = plt.gcf()
     plt.hist(allpix["mask"][allpix["pa"]>0],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
-    plt.xlabel("mask")
-    plt.ylabel("Pixels")
-    plt.yscale('log')
-    plt.ylim([0.1,1000000])
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix_bad["mask"][allpix_bad["pa"]>0],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
+    plt.xlabel("mask",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig2.savefig(outdir+"/mask.png",bbox_inches='tight')
-    fig2.savefig(outdir+"/mask.pdf",bbox_inches='tight')
+
+    if log:
+        fig2.savefig(outdir+"/mask_log.png",bbox_inches='tight')
+        fig2.savefig(outdir+"/mask_log.pdf",bbox_inches='tight')
+    else:
+        fig2.savefig(outdir+"/mask.png",bbox_inches='tight')
+        fig2.savefig(outdir+"/mask.pdf",bbox_inches='tight')
 
     plt.clf()
     fig3 = plt.gcf()
-    plt.hist(allpix["CAL_Mean"][allpix["pa"]>0],bins=np.linspace(0,50,20),histtype='step')
-    plt.xlabel("CAL offset")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["CAL_Mean"][allpix["pa"]>=100],bins=np.linspace(-10,50,30),histtype='step')
+    plt.hist(allpix_bad["CAL_Mean"][allpix_bad["pa"]>=100],bins=np.linspace(-10,50,30),histtype='step')
+    plt.xlabel("CAL offset",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig3.savefig(outdir+"/CAL_Mean.png",bbox_inches='tight')
-    fig3.savefig(outdir+"/CAL_Mean.pdf",bbox_inches='tight')
+
+    if log:
+        fig3.savefig(outdir+"/CAL_Mean_log.png",bbox_inches='tight')
+        fig3.savefig(outdir+"/CAL_Mean_log.pdf",bbox_inches='tight')
+    else:
+        fig3.savefig(outdir+"/CAL_Mean.png",bbox_inches='tight')
+        fig3.savefig(outdir+"/CAL_Mean.pdf",bbox_inches='tight')
 
     plt.clf()
     fig4 = plt.gcf()
-    plt.hist(allpix["CAL_RMS"][allpix["pa"]>0],bins=np.linspace(0,7,20),histtype='step')
-    plt.xlabel("CAL noise")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["CAL_RMS"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["CAL_RMS"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.xlabel("CAL noise",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig4.savefig(outdir+"/CAL_RMS.png",bbox_inches='tight')
-    fig4.savefig(outdir+"/CAL_RMS.pdf",bbox_inches='tight')
+
+    if log:
+        fig4.savefig(outdir+"/CAL_RMS_log.png",bbox_inches='tight')
+        fig4.savefig(outdir+"/CAL_RMS_log.pdf",bbox_inches='tight')
+    else:
+        fig4.savefig(outdir+"/CAL_RMS.png",bbox_inches='tight')
+        fig4.savefig(outdir+"/CAL_RMS.pdf",bbox_inches='tight')
 
     plt.clf()
     fig5 = plt.gcf()
-    plt.hist(allpix["CAL_Mean_pretrim"][allpix["pa"]>0],bins=np.linspace(0,200,20),histtype='step')
-    plt.xlabel("CAL offset (pre-trim)")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["CAL_Mean_pretrim"][allpix["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix_bad["CAL_Mean_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.xlabel("CAL offset (pre-trim)",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig5.savefig(outdir+"/CAL_Mean_pretrim.png",bbox_inches='tight')
-    fig5.savefig(outdir+"/CAL_Mean_pretrim.pdf",bbox_inches='tight')
+ 
+    if log:
+        fig5.savefig(outdir+"/CAL_Mean_pretrim_log.png",bbox_inches='tight')
+        fig5.savefig(outdir+"/CAL_Mean_pretrim_log.pdf",bbox_inches='tight')
+    else:
+        fig5.savefig(outdir+"/CAL_Mean_pretrim.png",bbox_inches='tight')
+        fig5.savefig(outdir+"/CAL_Mean_pretrim.pdf",bbox_inches='tight')
 
     plt.clf()
     fig6 = plt.gcf()
-    plt.hist(allpix["CAL_RMS_pretrim"][allpix["pa"]>0],bins=np.linspace(0,7,20),histtype='step')
-    plt.xlabel("CAL noise (pre-trim)")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["CAL_RMS_pretrim"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["CAL_RMS_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.xlabel("CAL noise (pre-trim)",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig6.savefig(outdir+"/CAL_RMS_pretrim.png",bbox_inches='tight')
-    fig6.savefig(outdir+"/CAL_RMS_pretrim.pdf",bbox_inches='tight')
+    
+    if log:
+        fig6.savefig(outdir+"/CAL_RMS_pretrim_log.png",bbox_inches='tight')
+        fig6.savefig(outdir+"/CAL_RMS_pretrim_log.pdf",bbox_inches='tight')
+    else:
+        fig6.savefig(outdir+"/CAL_RMS_pretrim.png",bbox_inches='tight')
+        fig6.savefig(outdir+"/CAL_RMS_pretrim.pdf",bbox_inches='tight')
 
     plt.clf()
     fig7 = plt.gcf()
-    plt.hist(allpix["THR_Mean"][allpix["pa"]>0],bins=np.linspace(0,200,20),histtype='step')
-    plt.xlabel("THR offset")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["THR_Mean"][allpix["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix_bad["THR_Mean"][allpix_bad["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.xlabel("THR offset",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig7.savefig(outdir+"/THR_Mean.png",bbox_inches='tight')
-    fig7.savefig(outdir+"/THR_Mean.pdf",bbox_inches='tight')
+    if log:
+        fig7.savefig(outdir+"/THR_Mean_log.png",bbox_inches='tight')
+        fig7.savefig(outdir+"/THR_Mean_log.pdf",bbox_inches='tight')
+    else:
+        fig7.savefig(outdir+"/THR_Mean.png",bbox_inches='tight')
+        fig7.savefig(outdir+"/THR_Mean.pdf",bbox_inches='tight')
 
     plt.clf()
     fig8 = plt.gcf()
-    plt.hist(allpix["THR_RMS"][allpix["pa"]>0],bins=np.linspace(0,7,20),histtype='step')
-    plt.xlabel("THR noise")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["THR_RMS"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["THR_RMS"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.xlabel("THR noise",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig8.savefig(outdir+"/THR_RMS.png",bbox_inches='tight')
-    fig8.savefig(outdir+"/THR_RMS.pdf",bbox_inches='tight')
+
+    if log:
+        fig8.savefig(outdir+"/THR_RMS_log.png",bbox_inches='tight')
+        fig8.savefig(outdir+"/THR_RMS_log.pdf",bbox_inches='tight')
+    else:
+        fig8.savefig(outdir+"/THR_RMS.png",bbox_inches='tight')
+        fig8.savefig(outdir+"/THR_RMS.pdf",bbox_inches='tight')
 
     plt.clf()
     fig9 = plt.gcf()
-    plt.hist(allpix["THR_Mean_pretrim"][allpix["pa"]>0],bins=np.linspace(0,200,20),histtype='step')
-    plt.xlabel("THR offset (pre-trim)")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["THR_Mean_pretrim"][allpix["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix_bad["THR_Mean_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.xlabel("THR offset (pre-trim)",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig9.savefig(outdir+"/THR_Mean_pretrim.png",bbox_inches='tight')
-    fig9.savefig(outdir+"/THR_Mean_pretrim.pdf",bbox_inches='tight')
+
+    if log:
+        fig9.savefig(outdir+"/THR_Mean_pretrim_log.png",bbox_inches='tight')
+        fig9.savefig(outdir+"/THR_Mean_pretrim_log.pdf",bbox_inches='tight')
+    else:
+        fig9.savefig(outdir+"/THR_Mean_pretrim.png",bbox_inches='tight')
+        fig9.savefig(outdir+"/THR_Mean_pretrim.pdf",bbox_inches='tight')
 
     plt.clf()
     fig10 = plt.gcf()
-    plt.hist(allpix["THR_RMS_pretrim"][allpix["pa"]>0],bins=np.linspace(0,7,20),histtype='step')
-    plt.xlabel("THR noise (pre-trim)")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["THR_RMS_pretrim"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["THR_RMS_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.xlabel("THR noise (pre-trim)",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig10.savefig(outdir+"/THR_RMS_pretrim.png",bbox_inches='tight')
-    fig10.savefig(outdir+"/THR_RMS_pretrim.pdf",bbox_inches='tight')
+
+    if log:
+        fig10.savefig(outdir+"/THR_RMS_pretrim_log.png",bbox_inches='tight')
+        fig10.savefig(outdir+"/THR_RMS_pretrim_log.pdf",bbox_inches='tight')
+    else:
+        fig10.savefig(outdir+"/THR_RMS_pretrim.png",bbox_inches='tight')
+        fig10.savefig(outdir+"/THR_RMS_pretrim.pdf",bbox_inches='tight')
 
     plt.clf()
     fig11 = plt.gcf()
-    plt.hist(allpix["Bump_Mean"][allpix["pa"]>0],bins=np.linspace(0,5,20),histtype='step')
-    plt.xlabel("Bump test offset")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["Bump_Mean"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["Bump_Mean"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.xlabel("Bump test offset",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig11.savefig(outdir+"/Bump_Mean.png",bbox_inches='tight')
-    fig11.savefig(outdir+"/Bump_Mean.pdf",bbox_inches='tight')
+
+    if log:
+        fig11.savefig(outdir+"/Bump_Mean_log.png",bbox_inches='tight')
+        fig11.savefig(outdir+"/Bump_Mean_log.pdf",bbox_inches='tight')
+    else:
+        fig11.savefig(outdir+"/Bump_Mean.png",bbox_inches='tight')
+        fig11.savefig(outdir+"/Bump_Mean.pdf",bbox_inches='tight')
 
     plt.clf()
     fig12 = plt.gcf()
-    plt.hist(allpix["Bump_RMS"][allpix["pa"]>0],bins=np.linspace(0,7,20),histtype='step')
-    plt.xlabel("Bump test noise")
-    plt.ylabel("Pixels")
-    plt.title(str(len(mapsas)) + " MaPSAs, " + str(npix) + " live pixels")
+    plt.hist(allpix["Bump_RMS"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["Bump_RMS"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.xlabel("Bump test noise",fontweight='bold')
+    plt.ylabel("Pixels",fontweight='bold')
+    if log:
+        plt.yscale('log')
+        plt.ylim([0.1,1000000])
+    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.tight_layout()
 #    plt.show()
-    fig12.savefig(outdir+"/Bump_RMS.png",bbox_inches='tight')
-    fig12.savefig(outdir+"/Bump_RMS.pdf",bbox_inches='tight')
+
+    if log:
+        fig12.savefig(outdir+"/Bump_RMS_log.png",bbox_inches='tight')
+        fig12.savefig(outdir+"/Bump_RMS_log.pdf",bbox_inches='tight')
+    else:
+        fig12.savefig(outdir+"/Bump_RMS.png",bbox_inches='tight')
+        fig12.savefig(outdir+"/Bump_RMS.pdf",bbox_inches='tight')
 
     plt.clf()
+    return
+
+def pa_2d(mapsas,outdir):
+
+    print("Processing " + str(len(mapsas)) + " MaPSAs for 2D pixel alive map")
+
+    allpix = pd.DataFrame([0]*1888,columns=["w"])
+    for m in mapsas:
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) in badchips:
+                print("Skipping " + chip.mapsa_name + "-"+str(chip.index))
+            else:
+                allpix["w"][chip.pixels["pa"]<100] += 1
+
+    x, y = np.meshgrid(np.linspace(0,117,118),np.linspace(0,15,16))
+
+    xflat = x.reshape(-1)
+    yflat = y.reshape(-1)
+
+    fig, ax = plt.subplots(figsize=(6,10))
+    plt.hist2d(xflat,yflat,bins=[118,16],weights=allpix["w"])
+
+    cbar = plt.colorbar()
+    cbar.set_label("dead/inefficient pixels",fontweight='bold')
+
+    ax.set_xlabel("column",fontweight='bold')
+    ax.set_ylabel("row",fontweight='bold')
+ 
+    plt.tight_layout()
+#    plt.show()
+
+    plt.savefig(outdir+"/pa_2dmap.png",bbox_inches='tight')
+    plt.savefig(outdir+"/pa_2dmap.pdf",bbox_inches='tight')
+
     return
 
 def main():
@@ -600,7 +935,7 @@ def main():
 
     for m in mapsa_names:
 
-        # Read if from file, if available
+        # Read MaPSA object from file, if available
         fname = 'pickles/'+m+'.pkl'
         if os.path.isfile(fname):
             print("Loading MaPSA " + m)
@@ -617,6 +952,12 @@ def main():
     MPA_registers(mapsas, name)
     MPA_memory(mapsas, name)
     pixel_plots(mapsas, name)
+    pa_2d(mapsas,name)
+
+    MPA_currents(mapsas, name, 0)
+    MPA_registers(mapsas, name, 0)
+    MPA_memory(mapsas, name, 0)
+    pixel_plots(mapsas, name, 0)
 
 if __name__ == "__main__":
     main()
