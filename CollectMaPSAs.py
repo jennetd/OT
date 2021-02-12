@@ -160,71 +160,71 @@ class MPA:
     def fill_pixels(self):
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+ str(self.index) + '_*_pixelalive.csv'
-        self.pixels = pd.read_csv(get_recent(cmd),index_col=0)
+        self.pixels = pd.read_csv(get_recent(cmd),index_col=0,skiprows=1)
         self.pixels.columns = ['pa']
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['CAL_RMS'] = tmp['value']
         self.pixels['CAL_RMS'][abs(self.pixels['CAL_RMS']-2.0)<0.000001] = -1
         self.pixels['CAL_RMS'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['CAL_Mean'] = tmp['value']
         self.pixels['CAL_Mean'][self.pixels['CAL_RMS']<0] = np.nan
         self.pixels['CAL_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['THR_RMS'] = tmp['value']
         self.pixels['THR_RMS'][abs(self.pixels['THR_RMS']-2.0)<0.000001] = -1
         self.pixels['THR_RMS'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['THR_Mean'] = tmp['value']
         self.pixels['THR_Mean'][self.pixels['THR_RMS']<0] = np.nan
         self.pixels['THR_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['CAL_RMS_pretrim'] = tmp['value']
         self.pixels['CAL_RMS_pretrim'][abs(self.pixels['CAL_RMS_pretrim']-2.0)<0.00001] = -1
         self.pixels['CAL_RMS_pretrim'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['CAL_Mean_pretrim'] = tmp['value']
         self.pixels['CAL_Mean_pretrim'][self.pixels['CAL_RMS_pretrim']<0] = np.nan
         self.pixels['CAL_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['THR_RMS_pretrim'] = tmp['value']
         self.pixels['THR_RMS_pretrim'][abs(self.pixels['THR_RMS_pretrim']-2.0)<0.000001] = -1
         self.pixels['THR_RMS_pretrim'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['THR_Mean_pretrim'] = tmp['value']
         self.pixels['THR_Mean_pretrim'][self.pixels['THR_RMS_pretrim']<0] = np.nan
         self.pixels['THR_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Noise_BadBump.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['Bump_RMS'] = tmp['value']
         self.pixels['Bump_RMS'][abs(self.pixels['Bump_RMS']-2.0)<0.000001] = -1
         self.pixels['Bump_RMS'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['Bump_Mean'] = tmp['value']
         self.pixels['Bump_Mean'][self.pixels['Bump_RMS']<0] = np.nan
         self.pixels['Bump_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'])
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
         self.pixels['mask'] = tmp['value']
         self.pixels['mask'][self.pixels['pa']<100] = -1
 
@@ -234,17 +234,17 @@ class MPA:
     def set_Scurves(self):
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_CAL_CAL.csv'
-        self.CALS = pd.read_csv(get_recent(cmd))
+        self.CALS = pd.read_csv(get_recent(cmd),skiprows=1)
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_THR_THR.csv'
-        self.THRS = pd.read_csv(get_recent(cmd))
+        self.THRS = pd.read_csv(get_recent(cmd),skiprows=1)
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_CAL_CAL.csv'
-        self.CALS_pretrim = pd.read_csv(get_recent(cmd))
+        self.CALS_pretrim = pd.read_csv(get_recent(cmd),skiprows=1)
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_THR_THR.csv'
-        self.THRS_pretrim = pd.read_csv(get_recent(cmd))
+        self.THRS_pretrim = pd.read_csv(get_recent(cmd),skiprows=1)
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_BumpBonding_SCurve_BadBump.csv'
-        self.BumpS = pd.read_csv(get_recent(cmd))
+        self.BumpS = pd.read_csv(get_recent(cmd),skiprows=1)
         
         return
 
@@ -651,8 +651,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig2 = plt.gcf()
-    plt.hist(allpix["mask"][allpix["pa"]>0],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
-    plt.hist(allpix_bad["mask"][allpix_bad["pa"]>0],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
+    plt.hist(allpix["mask"],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
+    plt.hist(allpix_bad["mask"],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
     plt.xlabel("mask",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -672,8 +672,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig3 = plt.gcf()
-    plt.hist(allpix["CAL_Mean"][allpix["pa"]>=100],bins=np.linspace(-10,50,30),histtype='step')
-    plt.hist(allpix_bad["CAL_Mean"][allpix_bad["pa"]>=100],bins=np.linspace(-10,50,30),histtype='step')
+    plt.hist(allpix["CAL_Mean"],bins=np.linspace(-10,50,30),histtype='step')
+    plt.hist(allpix_bad["CAL_Mean"],bins=np.linspace(-10,50,30),histtype='step')
     plt.xlabel("CAL offset",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -693,8 +693,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig4 = plt.gcf()
-    plt.hist(allpix["CAL_RMS"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["CAL_RMS"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix["CAL_RMS"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["CAL_RMS"],bins=np.linspace(-2,7,30),histtype='step')
     plt.xlabel("CAL noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -714,8 +714,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig5 = plt.gcf()
-    plt.hist(allpix["CAL_Mean_pretrim"][allpix["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
-    plt.hist(allpix_bad["CAL_Mean_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix["CAL_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix_bad["CAL_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
     plt.xlabel("CAL offset (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -735,8 +735,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig6 = plt.gcf()
-    plt.hist(allpix["CAL_RMS_pretrim"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["CAL_RMS_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix["CAL_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["CAL_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
     plt.xlabel("CAL noise (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -756,8 +756,9 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig7 = plt.gcf()
-    plt.hist(allpix["THR_Mean"][allpix["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
-    plt.hist(allpix_bad["THR_Mean"][allpix_bad["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    print(allpix["THR_Mean"][allpix["THR_Mean"]<1])
+    plt.hist(allpix["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix_bad["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
     plt.xlabel("THR offset",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -776,8 +777,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig8 = plt.gcf()
-    plt.hist(allpix["THR_RMS"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["THR_RMS"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix["THR_RMS"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["THR_RMS"],bins=np.linspace(-2,7,30),histtype='step')
     plt.xlabel("THR noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -797,8 +798,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig9 = plt.gcf()
-    plt.hist(allpix["THR_Mean_pretrim"][allpix["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
-    plt.hist(allpix_bad["THR_Mean_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix["THR_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(allpix_bad["THR_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
     plt.xlabel("THR offset (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -818,8 +819,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig10 = plt.gcf()
-    plt.hist(allpix["THR_RMS_pretrim"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["THR_RMS_pretrim"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix["THR_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["THR_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
     plt.xlabel("THR noise (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -839,8 +840,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig11 = plt.gcf()
-    plt.hist(allpix["Bump_Mean"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["Bump_Mean"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
     plt.xlabel("Bump test offset",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -860,8 +861,8 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig12 = plt.gcf()
-    plt.hist(allpix["Bump_RMS"][allpix["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["Bump_RMS"][allpix_bad["pa"]>=100],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix["Bump_RMS"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(allpix_bad["Bump_RMS"],bins=np.linspace(-2,7,30),histtype='step')
     plt.xlabel("Bump test noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
