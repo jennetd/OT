@@ -160,71 +160,71 @@ class MPA:
     def fill_pixels(self):
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+ str(self.index) + '_*_pixelalive.csv'
-        self.pixels = pd.read_csv(get_recent(cmd),index_col=0,skiprows=1)
+        self.pixels = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         self.pixels.columns = ['pa']
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_RMS'] = tmp['value']
         self.pixels['CAL_RMS'][abs(self.pixels['CAL_RMS']-2.0)<0.000001] = -1
         self.pixels['CAL_RMS'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_Mean'] = tmp['value']
         self.pixels['CAL_Mean'][self.pixels['CAL_RMS']<0] = np.nan
         self.pixels['CAL_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_RMS'] = tmp['value']
         self.pixels['THR_RMS'][abs(self.pixels['THR_RMS']-2.0)<0.000001] = -1
         self.pixels['THR_RMS'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_Mean'] = tmp['value']
         self.pixels['THR_Mean'][self.pixels['THR_RMS']<0] = np.nan
         self.pixels['THR_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_RMS_pretrim'] = tmp['value']
         self.pixels['CAL_RMS_pretrim'][abs(self.pixels['CAL_RMS_pretrim']-2.0)<0.00001] = -1
         self.pixels['CAL_RMS_pretrim'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_Mean_pretrim'] = tmp['value']
         self.pixels['CAL_Mean_pretrim'][self.pixels['CAL_RMS_pretrim']<0] = np.nan
         self.pixels['CAL_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_RMS_pretrim'] = tmp['value']
         self.pixels['THR_RMS_pretrim'][abs(self.pixels['THR_RMS_pretrim']-2.0)<0.000001] = -1
         self.pixels['THR_RMS_pretrim'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_Mean_pretrim'] = tmp['value']
         self.pixels['THR_Mean_pretrim'][self.pixels['THR_RMS_pretrim']<0] = np.nan
         self.pixels['THR_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Noise_BadBump.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['Bump_RMS'] = tmp['value']
         self.pixels['Bump_RMS'][abs(self.pixels['Bump_RMS']-2.0)<0.000001] = -1
         self.pixels['Bump_RMS'][self.pixels['pa']<100] = 0
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['Bump_Mean'] = tmp['value']
         self.pixels['Bump_Mean'][self.pixels['Bump_RMS']<0] = np.nan
         self.pixels['Bump_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],skiprows=1)
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['mask'] = tmp['value']
         self.pixels['mask'][self.pixels['pa']<100] = -1
 
@@ -234,17 +234,17 @@ class MPA:
     def set_Scurves(self):
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_CAL_CAL.csv'
-        self.CALS = pd.read_csv(get_recent(cmd),skiprows=1)
+        self.CALS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_THR_THR.csv'
-        self.THRS = pd.read_csv(get_recent(cmd),skiprows=1)
+        self.THRS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_CAL_CAL.csv'
-        self.CALS_pretrim = pd.read_csv(get_recent(cmd),skiprows=1)
+        self.CALS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_THR_THR.csv'
-        self.THRS_pretrim = pd.read_csv(get_recent(cmd),skiprows=1)
+        self.THRS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_BumpBonding_SCurve_BadBump.csv'
-        self.BumpS = pd.read_csv(get_recent(cmd),skiprows=1)
+        self.BumpS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         
         return
 
@@ -756,7 +756,6 @@ def pixel_plots(mapsas, outdir, log=True):
 
     plt.clf()
     fig7 = plt.gcf()
-    print(allpix["THR_Mean"][allpix["THR_Mean"]<1])
     plt.hist(allpix["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
     plt.hist(allpix_bad["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
     plt.xlabel("THR offset",fontweight='bold')
@@ -917,6 +916,89 @@ def pa_2d(mapsas,outdir):
 
     return
 
+def scurve_plots(mapsas, outdir):
+
+    print("Processing " + str(len(mapsas)) + " MaPSAs for pixel plots")
+
+    # CAL pre-trim
+    df = pd.DataFrame([])
+    for m in mapsas:
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
+                df = df.append(chip.CALS_pretrim[chip.pixels["CAL_RMS_pretrim"]<0])
+#                df = df.append(chip.CALS_pretrim[chip.pixels["CAL_Mean_pretrim"]<0])
+
+    df = df.transpose()[0:256]
+    print(df.shape)
+    fig1, ax1 = plt.subplots()
+    df.plot()
+    ax1.set(xlabel='Units',ylabel='CAL pre-trim')
+#    plt.show()
+
+    # CAL post-trim
+    df = pd.DataFrame([])
+    for m in mapsas:
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
+                df = df.append(chip.CALS[chip.pixels["CAL_RMS"]<0])
+#                df = df.append(chip.CALS[chip.pixels["CAL_Mean"]<0])
+
+    df = df.transpose()[0:256]
+    print(df.shape)
+    fig1, ax1 = plt.subplots()
+    if len(df)>0:
+        df.plot()
+    ax1.set(xlabel='Units',ylabel='CAL pre-trim')
+#    plt.show()
+
+    # THR pre-trim
+    df = pd.DataFrame([])
+    for m in mapsas:
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
+                df = df.append(chip.THRS_pretrim[chip.pixels["THR_RMS_pretrim"]<0])
+#                df = df.append(chip.THRS_pretrim[chip.pixels["THR_Mean_pretrim"]<0])
+
+    df = df.transpose()[0:256]
+    print(df.shape)
+#    fig1, ax1 = plt.subplots()
+#    if len(df)>0:
+#        df.plot()
+#    ax1.set(xlabel='Units',ylabel='THR pre-trim')
+#    plt.show()
+
+    # THR post-trim                                                                                                 
+    df = pd.DataFrame([])
+    for m in mapsas:
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
+                df = df.append(chip.THRS[chip.pixels["THR_RMS"]<0])
+#                df = df.append(chip.THRS[chip.pixels["THR_Mean"]<0])
+
+    df = df.transpose()[0:256]
+    print(df.shape)
+#    fig1, ax1 = plt.subplots()
+#    if len(df)>0:
+#        df.plot()
+#    ax1.set(xlabel='Units',ylabel='THR')
+#    plt.show()
+
+    # Bump
+    df = pd.DataFrame([])
+    for m in mapsas:
+        for chip in m.mpa_chips:
+            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
+                df = df.append(chip.BumpS[chip.pixels["Bump_RMS"]<0])
+#                df = df.append(chip.BumpS[chip.pixels["Bump_Mean"]<0])
+
+    df = df.transpose()[0:256]
+    print(df.shape)
+    fig1, ax1 = plt.subplots()
+    if len(df)>0:
+        df.plot()
+    ax1.set(xlabel='Units',ylabel='Bump')
+#    plt.show()
+
 def main():
 
     parser = argparse.ArgumentParser(description='MaPSA summary plots')
@@ -948,17 +1030,19 @@ def main():
 
     name = args.name[0]
 
-    MaPSA_IV(mapsas, name)
-    MPA_currents(mapsas, name)
-    MPA_registers(mapsas, name)
-    MPA_memory(mapsas, name)
-    pixel_plots(mapsas, name)
-    pa_2d(mapsas,name)
+#    MaPSA_IV(mapsas, name)
+#    MPA_currents(mapsas, name)
+#    MPA_registers(mapsas, name)
+#    MPA_memory(mapsas, name)
+#    pixel_plots(mapsas, name)
+#    pa_2d(mapsas,name)
 
-    MPA_currents(mapsas, name, 0)
-    MPA_registers(mapsas, name, 0)
-    MPA_memory(mapsas, name, 0)
-    pixel_plots(mapsas, name, 0)
+#    MPA_currents(mapsas, name, 0)
+#    MPA_registers(mapsas, name, 0)
+#    MPA_memory(mapsas, name, 0)
+#    pixel_plots(mapsas, name, 0)
+
+    scurve_plots(mapsas,name)
 
 if __name__ == "__main__":
     main()
