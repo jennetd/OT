@@ -633,6 +633,7 @@ def pixel_plots(mapsas, outdir, log=True):
 
     allpix = pd.DataFrame([])
     allpix_bad = pd.DataFrame([])
+
     for m in mapsas:
         for chip in m.mpa_chips:
             if chip.mapsa_name+"-"+str(chip.index) in badchips:
@@ -640,9 +641,13 @@ def pixel_plots(mapsas, outdir, log=True):
             else:
                 allpix = allpix.append(chip.pixels)
 
+    if len(allpix_bad) == 0:
+        allpix_bad = pd.DataFrame(columns=allpix.columns)
+
     npix = len(allpix["pa"])
     print(npix)
 
+    print("pa")
     fig1 = plt.figure(figsize=(12,9))
     plt.hist(allpix["pa"],bins=np.linspace(-20,220,12),histtype='step')
     plt.hist(allpix_bad["pa"],bins=np.linspace(-20,220,12),histtype='step')
@@ -663,6 +668,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig1.savefig(outdir+"/pa.png",bbox_inches='tight')
         fig1.savefig(outdir+"/pa.pdf",bbox_inches='tight')
 
+    print("mask")
     plt.clf()
     fig2 = plt.figure(figsize=(12,9))
     plt.hist(allpix["mask"],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
@@ -684,6 +690,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig2.savefig(outdir+"/mask.png",bbox_inches='tight')
         fig2.savefig(outdir+"/mask.pdf",bbox_inches='tight')
 
+    print("CAL_Mean")
     plt.clf()
     fig3 = plt.figure(figsize=(12,9))
     plt.hist(allpix["CAL_Mean"],bins=np.linspace(-10,50,30),histtype='step')
@@ -705,6 +712,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig3.savefig(outdir+"/CAL_Mean.png",bbox_inches='tight')
         fig3.savefig(outdir+"/CAL_Mean.pdf",bbox_inches='tight')
 
+    print("CAL_RMS")
     plt.clf()
     fig4 = plt.figure(figsize=(12,9))
     plt.hist(allpix["CAL_RMS"],bins=np.linspace(-2,7,30),histtype='step')
@@ -726,6 +734,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig4.savefig(outdir+"/CAL_RMS.png",bbox_inches='tight')
         fig4.savefig(outdir+"/CAL_RMS.pdf",bbox_inches='tight')
 
+    print("CAL_Mean_pretrim")
     plt.clf()
     fig5 = plt.figure(figsize=(12,9))
     plt.hist(allpix["CAL_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
@@ -747,6 +756,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig5.savefig(outdir+"/CAL_Mean_pretrim.png",bbox_inches='tight')
         fig5.savefig(outdir+"/CAL_Mean_pretrim.pdf",bbox_inches='tight')
 
+    print("CAL_RMS_pretrim")
     plt.clf()
     fig6 = plt.figure(figsize=(12,9))
     plt.hist(allpix["CAL_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
@@ -768,6 +778,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig6.savefig(outdir+"/CAL_RMS_pretrim.png",bbox_inches='tight')
         fig6.savefig(outdir+"/CAL_RMS_pretrim.pdf",bbox_inches='tight')
 
+    print("THR_Mean")
     plt.clf()
     fig7 = plt.figure(figsize=(12,9))
     plt.hist(allpix["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
@@ -788,6 +799,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig7.savefig(outdir+"/THR_Mean.png",bbox_inches='tight')
         fig7.savefig(outdir+"/THR_Mean.pdf",bbox_inches='tight')
 
+    print("THR_RMS")
     plt.clf()
     fig8 = plt.figure(figsize=(12,9))
     plt.hist(allpix["THR_RMS"],bins=np.linspace(-2,7,30),histtype='step')
@@ -809,6 +821,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig8.savefig(outdir+"/THR_RMS.png",bbox_inches='tight')
         fig8.savefig(outdir+"/THR_RMS.pdf",bbox_inches='tight')
 
+    print("THR_Mean_pretrim")
     plt.clf()
     fig9 = plt.figure(figsize=(12,9))
     plt.hist(allpix["THR_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
@@ -830,6 +843,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig9.savefig(outdir+"/THR_Mean_pretrim.png",bbox_inches='tight')
         fig9.savefig(outdir+"/THR_Mean_pretrim.pdf",bbox_inches='tight')
 
+    print("THR_RMS_pretrim")
     plt.clf()
     fig10 = plt.figure(figsize=(12,9))
     plt.hist(allpix["THR_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
@@ -851,6 +865,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig10.savefig(outdir+"/THR_RMS_pretrim.png",bbox_inches='tight')
         fig10.savefig(outdir+"/THR_RMS_pretrim.pdf",bbox_inches='tight')
 
+    print("Bump_Mean")
     plt.clf()
     fig11 = plt.figure(figsize=(12,9))
     plt.hist(allpix["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
@@ -872,6 +887,7 @@ def pixel_plots(mapsas, outdir, log=True):
         fig11.savefig(outdir+"/Bump_Mean.png",bbox_inches='tight')
         fig11.savefig(outdir+"/Bump_Mean.pdf",bbox_inches='tight')
 
+    print("Bump_RMS")
     plt.clf()
     fig12 = plt.figure(figsize=(12,9))
     plt.hist(allpix["Bump_RMS"],bins=np.linspace(-2,7,30),histtype='step')
@@ -930,76 +946,6 @@ def pa_2d(mapsas,outdir):
 
     return
 
-def scurve_plots(mapsas, outdir):
-
-    print("Processing " + str(len(mapsas)) + " MaPSAs for pixel plots")
-
-    # CAL pre-trim
-    df = pd.DataFrame([])
-    for m in mapsas:
-        for chip in m.mpa_chips:
-            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
-                df = df.append(chip.CALS_pretrim[chip.pixels["CAL_RMS_pretrim"]==0])
-#                df = df.append(chip.CALS_pretrim[chip.pixels["CAL_Mean_pretrim"]<0])
-
-    print(df.shape)
-    df = df[0:3].transpose()[0:256]
-    df.plot(legend=False,figsize=(12,9))
-    plt.xlabel('Units',fontweight='bold')
-    plt.ylabel('CAL pre-trim',fontweight='bold')
-    plt.tight_layout()
-    plt.show()
-    plt.savefig(outdir+"/CAL_pretrim_Scurves_RMSEQ0.png",bbox_inches='tight')
-    plt.savefig(outdir+"/CAL_pretrim_Scurves_RMSEQ0.pdf",bbox_inches='tight')
-
-    # CAL post-trim
-    df = pd.DataFrame([])
-    for m in mapsas:
-        for chip in m.mpa_chips:
-            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
-#                df = df.append(chip.CALS[chip.pixels["CAL_RMS"]==0])
-                df = df.append(chip.CALS[chip.pixels["CAL_Mean"]<0])
-
-    print(df.shape)
-    df = df.transpose()[0:256]
-
-    # THR pre-trim
-    df = pd.DataFrame([])
-    for m in mapsas:
-        for chip in m.mpa_chips:
-            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
-#                df = df.append(chip.THRS_pretrim[chip.pixels["THR_RMS_pretrim"]==0])
-                df = df.append(chip.THRS_pretrim[chip.pixels["THR_Mean_pretrim"]<0])
-
-    print(df.shape)
-    df = df[0:3].transpose()[0:256]
-    df.plot(legend=False,figsize=(12,9))
-    plt.xlabel('Units')
-    plt.ylabel('THR pre-trim')
-    plt.tight_layout()
-    plt.show()
-
-    # THR post-trim                                                                                                 
-    df = pd.DataFrame([])
-    for m in mapsas:
-        for chip in m.mpa_chips:
-            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
-#                df = df.append(chip.THRS[chip.pixels["THR_RMS"]==0])
-                df = df.append(chip.THRS[chip.pixels["THR_Mean"]<0])
-    print(df.shape)
-    df = df.transpose()[0:256]
-
-    # Bump
-    df = pd.DataFrame([])
-    for m in mapsas:
-        for chip in m.mpa_chips:
-            if chip.mapsa_name+"-"+str(chip.index) not in badchips:
-#                df = df.append(chip.BumpS[chip.pixels["Bump_RMS"]==0])
-                df = df.append(chip.BumpS[chip.pixels["Bump_Mean"]<0])
-
-    print(df.shape)
-    df = df.transpose()[0:256]
-
 def main():
 
     parser = argparse.ArgumentParser(description='MaPSA summary plots')
@@ -1032,6 +978,7 @@ def main():
     name = args.name[0]
 
     MaPSA_IV(mapsas, name)
+
     MPA_currents(mapsas, name)
     MPA_registers(mapsas, name)
     MPA_memory(mapsas, name)
@@ -1042,8 +989,6 @@ def main():
     MPA_registers(mapsas, name, 0)
     MPA_memory(mapsas, name, 0)
     pixel_plots(mapsas, name, 0)
-
-#    scurve_plots(mapsas,name)
 
 if __name__ == "__main__":
     main()
