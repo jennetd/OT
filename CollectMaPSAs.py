@@ -226,11 +226,11 @@ class MPA:
         self.pixels['Bump_RMS'][abs(self.pixels['Bump_RMS']-2.0)<0.000001] = -1
         self.pixels['Bump_RMS'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-        self.pixels['Bump_Mean'] = tmp['value']
-        self.pixels['Bump_Mean'][self.pixels['Bump_RMS']<0] = np.nan
-        self.pixels['Bump_Mean'][self.pixels['pa']<100] = np.nan
+#        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
+#        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+#        self.pixels['Bump_Mean'] = tmp['value']
+#        self.pixels['Bump_Mean'][self.pixels['Bump_RMS']<0] = np.nan
+#        self.pixels['Bump_Mean'][self.pixels['pa']<100] = np.nan
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
@@ -865,27 +865,27 @@ def pixel_plots(mapsas, outdir, log=True):
         fig10.savefig(outdir+"/THR_RMS_pretrim.png",bbox_inches='tight')
         fig10.savefig(outdir+"/THR_RMS_pretrim.pdf",bbox_inches='tight')
 
-    print("Bump_Mean")
-    plt.clf()
-    fig11 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.xlabel("Bump test mean",fontweight='bold')
-    plt.ylabel("Pixels",fontweight='bold')
-    if log:
-        plt.yscale('log')
-        plt.ylim([0.1,1000000])
-    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
-    plt.tight_layout()
+#    print("Bump_Mean")
+#    plt.clf()
+#    fig11 = plt.figure(figsize=(12,9))
+#    plt.hist(allpix["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
+#    plt.hist(allpix_bad["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
+#    plt.xlabel("Bump test mean",fontweight='bold')
+#    plt.ylabel("Pixels",fontweight='bold')
+#    if log:
+#        plt.yscale('log')
+#        plt.ylim([0.1,1000000])
+#    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
+#    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+#    plt.tight_layout()
 #    plt.show()
 
-    if log:
-        fig11.savefig(outdir+"/Bump_Mean_log.png",bbox_inches='tight')
-        fig11.savefig(outdir+"/Bump_Mean_log.pdf",bbox_inches='tight')
-    else:
-        fig11.savefig(outdir+"/Bump_Mean.png",bbox_inches='tight')
-        fig11.savefig(outdir+"/Bump_Mean.pdf",bbox_inches='tight')
+#    if log:
+#        fig11.savefig(outdir+"/Bump_Mean_log.png",bbox_inches='tight')
+#        fig11.savefig(outdir+"/Bump_Mean_log.pdf",bbox_inches='tight')
+#    else:
+#        fig11.savefig(outdir+"/Bump_Mean.png",bbox_inches='tight')
+#        fig11.savefig(outdir+"/Bump_Mean.pdf",bbox_inches='tight')
 
     print("Bump_RMS")
     plt.clf()
