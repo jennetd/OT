@@ -9,8 +9,7 @@ import matplotlib.pyplot as plt
 import cPickle
 import MakeModulePlots
 
-badchips = ["HPK34_1-1","HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14","QP_no13-10"]
-
+badchips = ["HPK34_1-1","HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14","QP_no13-10","QP_no14-5","QP_no18p2-14","QP_no27p1-13"]
 
 plt.rc('font', size=22, weight='bold')
 plt.rc('axes', titlesize=22)#, labelsize=18)
@@ -57,7 +56,6 @@ class MPA:
         self.set_regerrs()
 
         self.fill_pixels()
-
         self.set_Scurves()
 
     def set_currents(self):
@@ -242,17 +240,18 @@ class MPA:
     # S curves
     def set_Scurves(self):
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_CAL_CAL.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_CAL_CAL.csv'
         self.CALS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PostTrim_THR_THR.csv'
+
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_THR_THR.csv'
         self.THRS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_CAL_CAL.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_CAL_CAL.csv'
         self.CALS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_PreTrim_THR_THR.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_THR_THR.csv'
         self.THRS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'*_BumpBonding_SCurve_BadBump.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_BumpBonding_SCurve_BadBump.csv'
         self.BumpS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         
         return
@@ -647,6 +646,8 @@ def pixel_plots(mapsas, outdir, log=True):
     npix = len(allpix["pa"])
     print(npix)
 
+    logmax = npix*50
+
     print("pa")
     fig1 = plt.figure(figsize=(12,9))
     plt.hist(allpix["pa"],bins=np.linspace(-20,220,12),histtype='step')
@@ -655,7 +656,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -677,7 +678,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -699,7 +700,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -721,7 +722,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -743,7 +744,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -765,7 +766,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -787,7 +788,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -808,7 +809,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -830,7 +831,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -852,7 +853,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -896,7 +897,7 @@ def pixel_plots(mapsas, outdir, log=True):
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
-        plt.ylim([0.1,1000000])
+        plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
     plt.legend(["Good MPA","Bad MPA"],frameon=False)
     plt.tight_layout()
@@ -979,16 +980,16 @@ def main():
 
     MaPSA_IV(mapsas, name)
 
-    MPA_currents(mapsas, name)
-    MPA_registers(mapsas, name)
-    MPA_memory(mapsas, name)
-    pixel_plots(mapsas, name)
-    pa_2d(mapsas,name)
+#    MPA_currents(mapsas, name)
+#    MPA_registers(mapsas, name)
+#    MPA_memory(mapsas, name)
+#    pixel_plots(mapsas, name)
+#    pa_2d(mapsas,name)
 
-    MPA_currents(mapsas, name, 0)
-    MPA_registers(mapsas, name, 0)
-    MPA_memory(mapsas, name, 0)
-    pixel_plots(mapsas, name, 0)
+#    MPA_currents(mapsas, name, 0)
+#    MPA_registers(mapsas, name, 0)
+#    MPA_memory(mapsas, name, 0)
+#    pixel_plots(mapsas, name, 0)
 
 if __name__ == "__main__":
     main()
