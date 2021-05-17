@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import cPickle
 import MakeModulePlots
 
-badchips = ["HPK34_1-1","HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14","QP_no13-10","QP_no14-5","QP_no18p2-14","QP_no27p1-13"]
+badchips = ["HPK34_1-1","HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14","QP_no13-10","QP_no14-5","QP_no18p2-14","QP_no27p1-13","QP_no24p1c-1","QuikPak_PS-p-P1-8","QuikPak_PS-p-P2_4-12"]
 
 plt.rc('font', size=22, weight='bold')
 plt.rc('axes', titlesize=22)#, labelsize=18)
@@ -53,7 +53,7 @@ class MPA:
 
         self.set_currents()
         self.set_memerrs()
-        self.set_regerrs()
+#        self.set_regerrs()
 
         self.fill_pixels()
         self.set_Scurves()
@@ -224,12 +224,6 @@ class MPA:
         self.pixels['Bump_RMS'][abs(self.pixels['Bump_RMS']-2.0)<0.000001] = -1
         self.pixels['Bump_RMS'][self.pixels['pa']<100] = np.nan
 
-#        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Offset_BadBump.csv'
-#        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-#        self.pixels['Bump_Mean'] = tmp['value']
-#        self.pixels['Bump_Mean'][self.pixels['Bump_RMS']<0] = np.nan
-#        self.pixels['Bump_Mean'][self.pixels['pa']<100] = np.nan
-
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['mask'] = tmp['value']
@@ -319,7 +313,12 @@ def MaPSA_IV(mapsas, outdir):
 
     fig, ax = plt.subplots(figsize=(12,9))
     for m in mapsas:
-        ax.plot(m.IV["V"],m.IV["I"])
+        if m.name in ['QuikPak_PS-p-P1_kapton','QuikPak_PS-p-P1_4_kapton','QuikPak_PS-p-P2','QuikPak_PS-p-P2_4_kapton']:
+            ax.plot(m.IV["V"],m.IV["I"],color='red')
+        elif m.name in ['QP_no20p1b','QP_no20p1c','QP_no20p2','QP_no20p2b','QP_no22p1','QP_no22p2','QP_no22p2b','QP_no24p1','QP_no24p1b','QP_no24p1c','QP_no24p2','QP_no17p2b','QP_no17p2c']:
+            ax.plot(m.IV["V"],m.IV["I"],color='green')
+        else:
+            ax.plot(m.IV["V"],m.IV["I"],color='blue')
 #    ax.legend([m.name for m in mapsas],frameon=False)
     ax.set_xlabel("V [V]",fontweight='bold')
     ax.set_ylabel("I [uA]",fontweight='bold')
@@ -338,42 +337,38 @@ def MPA_currents(mapsas, outdir, log=True):
 
     print("Processing " + str(len(mapsas)) + " MaPSAs for current plots")
 
-    I_ana_good = []
-    I_dig_good = []
-    I_pad_good = []
-    I_tot_good = []
-
-    I_ana_bad = []
-    I_dig_bad = []
-    I_pad_bad = []
-    I_tot_bad = []
+    I_ana = [[],[]]
+    I_dig = [[],[]]
+    I_pad = [[],[]]
+    I_tot = [[],[]]
 
     nchips_good = 0
     nchips_bad = 0
+
     for m in mapsas:
         for chip in m.mpa_chips:
             if chip.mapsa_name+"-"+str(chip.index) in badchips:
-                I_ana_bad += [chip.I_ana]
-                I_dig_bad += [chip.I_dig]
-                I_pad_bad += [chip.I_pad]
-                I_tot_bad += [chip.I_tot]
+                I_ana[0] += [chip.I_ana]
+                I_dig[0] += [chip.I_dig]
+                I_pad[0] += [chip.I_pad]
+                I_tot[0] += [chip.I_tot]
                 nchips_bad += 1
             else:
-                I_ana_good += [chip.I_ana]
-                I_dig_good += [chip.I_dig]
-                I_pad_good += [chip.I_pad]
-                I_tot_good += [chip.I_tot]
+                I_ana[1] += [chip.I_ana]
+                I_dig[1] += [chip.I_dig]
+                I_pad[1] += [chip.I_pad]
+                I_tot[1] += [chip.I_tot]
                 nchips_good += 1
 
     fig1, ax1 = plt.subplots(figsize=(12,9))
-    plt.hist(I_ana_good,bins=np.linspace(-10,100,20),histtype='step')
-    plt.hist(I_ana_bad,bins=np.linspace(-10,100,20),histtype='step')
+    plt.hist(np.array(I_ana),bins=np.linspace(-10,100,20),histtype='bar',stacked=True)
+#    plt.hist(x,bins=np.linspace(-10,100,20),histtype='bar',stacked=True)
     ax1.set_xlabel("I_ana [uA]",fontweight='bold')
     ax1.set_ylabel("MPAs",fontweight='bold')
     if log:
         ax1.set(yscale='log',ylim=[0.1,1000])
 
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
  #   plt.show()
 
@@ -387,14 +382,13 @@ def MPA_currents(mapsas, outdir, log=True):
     plt.clf()
 
     fig2, ax2 = plt.subplots(figsize=(12,9))
-    plt.hist(I_dig_good,bins=np.linspace(-10,200,20),histtype='step')
-    plt.hist(I_dig_bad,bins=np.linspace(-10,200,20),histtype='step')
+    plt.hist(np.array(I_dig),bins=np.linspace(-10,200,20),histtype='bar',stacked=True)
     ax2.set_xlabel("I_dig [uA]",fontweight='bold')
     ax2.set_ylabel("MPAs",fontweight='bold')
     if log:
         ax2.set(yscale='log',ylim=[0.1,1000])
 
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
  #   plt.show()
 
@@ -408,14 +402,13 @@ def MPA_currents(mapsas, outdir, log=True):
     plt.clf()
 
     fig3, ax3 = plt.subplots(figsize=(12,9))
-    plt.hist(I_pad_good,bins=np.linspace(-10,50,20),histtype='step')
-    plt.hist(I_pad_bad,bins=np.linspace(-10,50,20),histtype='step')
+    plt.hist(np.array(I_pad),bins=np.linspace(-10,50,20),histtype='bar',stacked=True)
     ax3.set_xlabel("I_pad [uA]",fontweight='bold')
     ax3.set_ylabel("MPAs",fontweight='bold')
     if log:
         ax3.set(yscale='log',ylim=[0.1,1000])
 
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
  #   plt.show()
 
@@ -429,14 +422,13 @@ def MPA_currents(mapsas, outdir, log=True):
     plt.clf()
 
     fig4, ax4 = plt.subplots(figsize=(12,9))
-    plt.hist(I_tot_good,bins=np.linspace(-10,300,20),histtype='step')
-    plt.hist(I_tot_bad,bins=np.linspace(-10,300,20),histtype='step')
+    plt.hist(np.array(I_tot),bins=np.linspace(-10,300,20),histtype='bar',stacked=True)
     ax4.set_xlabel("I_tot [uA]",fontweight='bold')
     ax4.set_ylabel("MPAs",fontweight='bold')
     if log:
         ax4.set(yscale='log',ylim=[0.1,1000])
 
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
  #   plt.show()
 
@@ -455,27 +447,23 @@ def MPA_registers(mapsas, outdir, log=True):
 
     print("Processing " + str(len(mapsas)) + " MaPSAs register plots")
 
-    regerr_peri_good = []
-    regerr_row_good = []
-    regerr_pixel_good = []
-
-    regerr_peri_bad = []
-    regerr_row_bad = []
-    regerr_pixel_bad = []
+    regerr_peri = [[],[]]
+    regerr_row = [[],[]]
+    regerr_pixel = [[],[]]
 
     nchips_good = 0
     nchips_bad = 0
     for m in mapsas:
         for chip in m.mpa_chips:
             if chip.mapsa_name+"-"+str(chip.index) in badchips:
-                regerr_peri_bad  += [chip.regerr_peri]
-                regerr_row_bad   += [chip.regerr_row]
-                regerr_pixel_bad += [chip.regerr_pixel]
+                regerr_peri[0]  += [chip.regerr_peri]
+                regerr_row[0]   += [chip.regerr_row]
+                regerr_pixel[0] += [chip.regerr_pixel]
                 nchips_bad += 1
             else:
-                regerr_peri_good  += [chip.regerr_peri]
-                regerr_row_good   += [chip.regerr_row]
-                regerr_pixel_good += [chip.regerr_pixel]
+                regerr_peri[1]  += [chip.regerr_peri]
+                regerr_row[1]   += [chip.regerr_row]
+                regerr_pixel[1] += [chip.regerr_pixel]
                 nchips_good += 1
 
     fig, (ax1,ax2,ax3) = plt.subplots(1,3,sharey=True)
@@ -483,17 +471,14 @@ def MPA_registers(mapsas, outdir, log=True):
     fig.set_figheight(9)
     fig.set_figwidth(12)
 
-    ax1.hist(regerr_peri_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
-    ax1.hist(regerr_peri_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax1.hist(np.array(regerr_peri),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='bar',stacked=True)
     ax1.set_xlabel("Reg. Err. (Peri)",fontweight='bold')
     ax1.set_ylabel("MPAs",fontweight='bold')
 
-    ax2.hist(regerr_row_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
-    ax2.hist(regerr_row_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax2.hist(np.array(regerr_row),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='bar',stacked=True)
     ax2.set_xlabel("Reg. Err. (Row)",fontweight='bold')
 
-    ax3.hist(regerr_pixel_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
-    ax3.hist(regerr_pixel_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='step')
+    ax3.hist(np.array(regerr_pixel),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='bar',stacked=True)
     ax3.set_xlabel("Reg. Err. (Pix)",fontweight='bold')
 
     if log:
@@ -501,7 +486,7 @@ def MPA_registers(mapsas, outdir, log=True):
         ax2.set(yscale='log',ylim=[0.1,1000])
         ax3.set(yscale='log',ylim=[0.1,1000])
 
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -519,90 +504,71 @@ def MPA_registers(mapsas, outdir, log=True):
 def MPA_memory(mapsas, outdir, log=True):
     print("Processing " + str(len(mapsas)) + " MaPSAs for memory plots")
 
-    error1_good = []
-    stuck1_good = []
-    i2c1_good = []
-    miss1_good = []
-
-    error1_bad = []
-    stuck1_bad = []
-    i2c1_bad = []
-    miss1_bad = []
+    error1 = [[],[]]
+    stuck1 = [[],[]]
+    i2c1 = [[],[]]
+    miss1 = [[],[]]
 
     nchips_good = 0
     nchips_bad = 0
     for m in mapsas:
         for chip in m.mpa_chips:
             if chip.mapsa_name+"-"+str(chip.index) in badchips:
-                error1_bad += [chip.memerrs["error"]["1.0V"]]
-                stuck1_bad += [chip.memerrs["stuck"]["1.0V"]]
-                i2c1_bad   += [chip.memerrs["I2C"]["1.0V"]]
-                miss1_bad  += [chip.memerrs["missing"]["1.0V"]]
+                error1[0] += [chip.memerrs["error"]["1.0V"]]
+                stuck1[0] += [chip.memerrs["stuck"]["1.0V"]]
+                i2c1[0]   += [chip.memerrs["I2C"]["1.0V"]]
+                miss1[0]  += [chip.memerrs["missing"]["1.0V"]]
                 nchips_bad += 1
             else:
-                error1_good += [chip.memerrs["error"]["1.0V"]]
-                stuck1_good += [chip.memerrs["stuck"]["1.0V"]]
-                i2c1_good   += [chip.memerrs["I2C"]["1.0V"]]
-                miss1_good  += [chip.memerrs["missing"]["1.0V"]]
+                error1[1] += [chip.memerrs["error"]["1.0V"]]
+                stuck1[1] += [chip.memerrs["stuck"]["1.0V"]]
+                i2c1[1]   += [chip.memerrs["I2C"]["1.0V"]]
+                miss1[1]  += [chip.memerrs["missing"]["1.0V"]]
                 nchips_good += 1
 
     fig, ax = plt.subplots(2,4, sharex=True, sharey=True)
     plt.subplots_adjust(wspace=0, hspace=0)
     fig.set_figheight(9)
     fig.set_figwidth(16)
-#    fig3.suptitle(str(len(mapsas)) + " MaPSAs, " + str(nchips) + " MPAs")
-
-    ax[0,0].hist(error1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,0].hist(error1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    
+    ax[0,0].hist(np.array(error1),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
     ax[0,0].set_ylabel("MPAs (at 1.0 V)",fontweight='bold')
 
-    ax[0,1].hist(stuck1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,1].hist(stuck1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,1].hist(np.array(stuck1),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
 
-    ax[0,2].hist(i2c1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,2].hist(i2c1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,2].hist(np.array(i2c1),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
 
-    ax[0,3].hist(miss1_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[0,3].hist(miss1_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[0,3].hist(np.array(miss1),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
 
-    error2_good = []
-    stuck2_good = []
-    i2c2_good = []
-    miss2_good = []
-
-    error2_bad = []
-    stuck2_bad = []
-    i2c2_bad = []
-    miss2_bad = []
+    error2 = [[],[]]
+    stuck2 = [[],[]]
+    i2c2 = [[],[]]
+    miss2 = [[],[]]
 
     for m in mapsas:
         for chip in m.mpa_chips:
             if chip.mapsa_name+"-"+str(chip.index) in badchips:
-                error2_bad += [chip.memerrs["error"]["1.2V"]]
-                stuck2_bad += [chip.memerrs["stuck"]["1.2V"]]
-                i2c2_bad   += [chip.memerrs["I2C"]["1.2V"]]
-                miss2_bad  += [chip.memerrs["missing"]["1.2V"]]
+                error2[0] += [chip.memerrs["error"]["1.2V"]]
+                stuck2[0] += [chip.memerrs["stuck"]["1.2V"]]
+                i2c2[0]   += [chip.memerrs["I2C"]["1.2V"]]
+                miss2[0]  += [chip.memerrs["missing"]["1.2V"]]
             else:
-                error2_good += [chip.memerrs["error"]["1.2V"]]
-                stuck2_good += [chip.memerrs["stuck"]["1.2V"]]
-                i2c2_good   += [chip.memerrs["I2C"]["1.2V"]]
-                miss2_good  += [chip.memerrs["missing"]["1.2V"]]
+                error2[1] += [chip.memerrs["error"]["1.2V"]]
+                stuck2[1] += [chip.memerrs["stuck"]["1.2V"]]
+                i2c2[1]   += [chip.memerrs["I2C"]["1.2V"]]
+                miss2[1]  += [chip.memerrs["missing"]["1.2V"]]
 
-    ax[1,0].hist(error2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,0].hist(error2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,0].hist(np.array(error2),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
     ax[1,0].set_xlabel("error",fontweight='bold')
     ax[1,0].set_ylabel("MPAs (at 1.2 V)",fontweight='bold')
 
-    ax[1,1].hist(stuck2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,1].hist(stuck2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,1].hist(np.array(stuck2),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
     ax[1,1].set_xlabel("stuck",fontweight='bold')
 
-    ax[1,2].hist(i2c2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,2].hist(i2c2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,2].hist(np.array(i2c2),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
     ax[1,2].set_xlabel("I2C",fontweight='bold')
 
-    ax[1,3].hist(miss2_good,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
-    ax[1,3].hist(miss2_bad,bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='step')
+    ax[1,3].hist(np.array(miss2),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5,4.5],histtype='bar',stacked=True)
     ax[1,3].set_xlabel("missing",fontweight='bold')
 
     for i in range(0,2):
@@ -611,7 +577,7 @@ def MPA_memory(mapsas, outdir, log=True):
             if log:
                 ax[i,j].set(yscale='log',ylim=[0.1,1000])
 
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -650,15 +616,14 @@ def pixel_plots(mapsas, outdir, log=True):
 
     print("pa")
     fig1 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["pa"],bins=np.linspace(-20,220,12),histtype='step')
-    plt.hist(allpix_bad["pa"],bins=np.linspace(-20,220,12),histtype='step')
+    plt.hist(np.array(allpix_bad["pa"],allpix["pa"]),bins=np.linspace(-20,220,12),histtype='bar',stacked=True)
     plt.xlabel("alive",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -672,15 +637,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("mask")
     plt.clf()
     fig2 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["mask"],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
-    plt.hist(allpix_bad["mask"],bins=[-1.5,-0.5,0.5,1.5],histtype='step')
+    plt.hist(np.array(allpix_bad["mask"],allpix["mask"]),bins=[-1.5,-0.5,0.5,1.5],histtype='bar',stacked=True)
     plt.xlabel("mask",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -694,15 +658,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_Mean")
     plt.clf()
     fig3 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["CAL_Mean"],bins=np.linspace(-10,50,30),histtype='step')
-    plt.hist(allpix_bad["CAL_Mean"],bins=np.linspace(-10,50,30),histtype='step')
+    plt.hist(np.array(allpix_bad["CAL_Mean"],allpix["CAL_Mean"]),bins=np.linspace(-10,50,30),histtype='bar',stacked=True)
     plt.xlabel("CAL mean",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -716,15 +679,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_RMS")
     plt.clf()
     fig4 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["CAL_RMS"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["CAL_RMS"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(np.array(allpix_bad["CAL_RMS"],allpix["CAL_RMS"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("CAL noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -738,15 +700,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_Mean_pretrim")
     plt.clf()
     fig5 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["CAL_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
-    plt.hist(allpix_bad["CAL_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(np.array(allpix_bad["CAL_Mean_pretrim"],allpix["CAL_Mean_pretrim"]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
     plt.xlabel("CAL mean (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
  
@@ -760,15 +721,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_RMS_pretrim")
     plt.clf()
     fig6 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["CAL_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["CAL_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(np.array(allpix_bad["CAL_RMS_pretrim"],allpix["CAL_RMS_pretrim"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("CAL noise (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
     
@@ -782,15 +742,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_Mean")
     plt.clf()
     fig7 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
-    plt.hist(allpix_bad["THR_Mean"],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(np.array(allpix_bad["THR_Mean"],allpix["THR_Mean"]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
     plt.xlabel("THR mean",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
     if log:
@@ -803,15 +762,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_RMS")
     plt.clf()
     fig8 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["THR_RMS"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["THR_RMS"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(np.array(allpix_bad["THR_RMS"],allpix["THR_RMS"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("THR noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -825,15 +783,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_Mean_pretrim")
     plt.clf()
     fig9 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["THR_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
-    plt.hist(allpix_bad["THR_Mean_pretrim"],bins=np.linspace(-24,256,30),histtype='step')
+    plt.hist(np.array(allpix_bad["THR_Mean_pretrim"],allpix["THR_Mean_pretrim"]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
     plt.xlabel("THR mean (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -847,15 +804,14 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_RMS_pretrim")
     plt.clf()
     fig10 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["THR_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["THR_RMS_pretrim"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(np.array(allpix_bad["THR_RMS_pretrim"],allpix["THR_RMS_pretrim"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("THR noise (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -866,40 +822,17 @@ def pixel_plots(mapsas, outdir, log=True):
         fig10.savefig(outdir+"/THR_RMS_pretrim.png",bbox_inches='tight')
         fig10.savefig(outdir+"/THR_RMS_pretrim.pdf",bbox_inches='tight')
 
-#    print("Bump_Mean")
-#    plt.clf()
-#    fig11 = plt.figure(figsize=(12,9))
-#    plt.hist(allpix["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
-#    plt.hist(allpix_bad["Bump_Mean"],bins=np.linspace(-2,7,30),histtype='step')
-#    plt.xlabel("Bump test mean",fontweight='bold')
-#    plt.ylabel("Pixels",fontweight='bold')
-#    if log:
-#        plt.yscale('log')
-#        plt.ylim([0.1,1000000])
-#    plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-#    plt.legend(["Good MPA","Bad MPA"],frameon=False)
-#    plt.tight_layout()
-#    plt.show()
-
-#    if log:
-#        fig11.savefig(outdir+"/Bump_Mean_log.png",bbox_inches='tight')
-#        fig11.savefig(outdir+"/Bump_Mean_log.pdf",bbox_inches='tight')
-#    else:
-#        fig11.savefig(outdir+"/Bump_Mean.png",bbox_inches='tight')
-#        fig11.savefig(outdir+"/Bump_Mean.pdf",bbox_inches='tight')
-
     print("Bump_RMS")
     plt.clf()
     fig12 = plt.figure(figsize=(12,9))
-    plt.hist(allpix["Bump_RMS"],bins=np.linspace(-2,7,30),histtype='step')
-    plt.hist(allpix_bad["Bump_RMS"],bins=np.linspace(-2,7,30),histtype='step')
+    plt.hist(np.array(allpix_bad["Bump_RMS"],allpix["Bump_RMS"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("Bump test noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
         plt.yscale('log')
         plt.ylim([0.1,logmax])
     plt.title(str(len(mapsas)) + " MaPSAs",fontweight='bold')
-    plt.legend(["Good MPA","Bad MPA"],frameon=False)
+    plt.legend(["Bad MPA","Good MPA"],frameon=False)
     plt.tight_layout()
 #    plt.show()
 
@@ -980,16 +913,16 @@ def main():
 
     MaPSA_IV(mapsas, name)
 
-#    MPA_currents(mapsas, name)
+    MPA_currents(mapsas, name)
 #    MPA_registers(mapsas, name)
-#    MPA_memory(mapsas, name)
-#    pixel_plots(mapsas, name)
-#    pa_2d(mapsas,name)
+    MPA_memory(mapsas, name)
+    pixel_plots(mapsas, name)
+    pa_2d(mapsas,name)
 
-#    MPA_currents(mapsas, name, 0)
+    MPA_currents(mapsas, name, 0)
 #    MPA_registers(mapsas, name, 0)
-#    MPA_memory(mapsas, name, 0)
-#    pixel_plots(mapsas, name, 0)
+    MPA_memory(mapsas, name, 0)
+    pixel_plots(mapsas, name, 0)
 
 if __name__ == "__main__":
     main()
