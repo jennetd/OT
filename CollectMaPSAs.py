@@ -616,7 +616,7 @@ def pixel_plots(mapsas, outdir, log=True):
 
     print("pa")
     fig1 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["pa"],allpix["pa"]),bins=np.linspace(-20,220,12),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["pa"],allpix["pa"]]),bins=np.linspace(-20,220,12),histtype='bar',stacked=True)
     plt.xlabel("alive",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -637,7 +637,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("mask")
     plt.clf()
     fig2 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["mask"],allpix["mask"]),bins=[-1.5,-0.5,0.5,1.5],histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["mask"],allpix["mask"]]),bins=[-1.5,-0.5,0.5,1.5],histtype='bar',stacked=True)
     plt.xlabel("mask",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -658,7 +658,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_Mean")
     plt.clf()
     fig3 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["CAL_Mean"],allpix["CAL_Mean"]),bins=np.linspace(-10,50,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["CAL_Mean"],allpix["CAL_Mean"]]),bins=np.linspace(-10,50,30),histtype='bar',stacked=True)
     plt.xlabel("CAL mean",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -679,7 +679,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_RMS")
     plt.clf()
     fig4 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["CAL_RMS"],allpix["CAL_RMS"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["CAL_RMS"],allpix["CAL_RMS"]]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("CAL noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -700,7 +700,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_Mean_pretrim")
     plt.clf()
     fig5 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["CAL_Mean_pretrim"],allpix["CAL_Mean_pretrim"]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["CAL_Mean_pretrim"],allpix["CAL_Mean_pretrim"]]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
     plt.xlabel("CAL mean (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -721,7 +721,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("CAL_RMS_pretrim")
     plt.clf()
     fig6 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["CAL_RMS_pretrim"],allpix["CAL_RMS_pretrim"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["CAL_RMS_pretrim"],allpix["CAL_RMS_pretrim"]]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("CAL noise (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -742,7 +742,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_Mean")
     plt.clf()
     fig7 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["THR_Mean"],allpix["THR_Mean"]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["THR_Mean"],allpix["THR_Mean"]]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
     plt.xlabel("THR mean",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -762,7 +762,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_RMS")
     plt.clf()
     fig8 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["THR_RMS"],allpix["THR_RMS"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["THR_RMS"],allpix["THR_RMS"]]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("THR noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -783,7 +783,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_Mean_pretrim")
     plt.clf()
     fig9 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["THR_Mean_pretrim"],allpix["THR_Mean_pretrim"]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["THR_Mean_pretrim"],allpix["THR_Mean_pretrim"]]),bins=np.linspace(-24,256,30),histtype='bar',stacked=True)
     plt.xlabel("THR mean (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -804,7 +804,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("THR_RMS_pretrim")
     plt.clf()
     fig10 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["THR_RMS_pretrim"],allpix["THR_RMS_pretrim"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["THR_RMS_pretrim"],allpix["THR_RMS_pretrim"]]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("THR noise (pre-trim)",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
@@ -825,7 +825,7 @@ def pixel_plots(mapsas, outdir, log=True):
     print("Bump_RMS")
     plt.clf()
     fig12 = plt.figure(figsize=(12,9))
-    plt.hist(np.array(allpix_bad["Bump_RMS"],allpix["Bump_RMS"]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
+    plt.hist(np.array([allpix_bad["Bump_RMS"],allpix["Bump_RMS"]]),bins=np.linspace(-2,7,30),histtype='bar',stacked=True)
     plt.xlabel("Bump test noise",fontweight='bold')
     plt.ylabel("Pixels",fontweight='bold')
     if log:
