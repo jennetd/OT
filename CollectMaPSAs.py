@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import cPickle
+from datetime import datetime
 
 from derivative import *
 import MakeModulePlots
@@ -53,11 +54,11 @@ class MPA:
         self.log_file = get_recent(cmd)
 
         self.fill_pixels()
-        
+        self.add_derivative()
+
         if scurves:
             print("Saving s-curves")
             self.set_Scurves()
-            self.add_derivative()
         else:
             self.set_currents()
             self.set_memerrs()
@@ -120,9 +121,7 @@ class MPA:
             cmd = "grep 'Total MPA errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
 
         x = os.popen(cmd).read()
-        print(x)
         y = x.split()[-1]
-        print("peri",y)
         self.regerr_peri = float(y)
 
         # Row errors              
@@ -132,7 +131,6 @@ class MPA:
 
         x = os.popen(cmd).read()
         y = x.split()[-1]
-        print("row",y)
         self.regerr_row = float(y)
 
         # Pixel errors              
@@ -142,7 +140,6 @@ class MPA:
 
         x = os.popen(cmd).read()
         y = x.split()[-1]
-        print("pixel",y)
         self.regerr_pixel = float(y)
 
         return
@@ -251,25 +248,48 @@ class MPA:
 
     def add_derivative(self):
         
-        mean, sigma = derivative_THR(self.THRS_pretrim)
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_CAL_CAL.csv'
+        CALS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_THR_THR.csv'
+        THRS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
+
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_CAL_CAL.csv'
+        CALS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_THR_THR.csv'
+        THRS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
+
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_BumpBonding_SCurve_BadBump.csv'
+        BumpS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
+
+        t1 = datetime.now()
+        mean, sigma = derivative_THR(THRS_pretrim)
         self.pixels['THR_Mean_pretrim_DER'] = mean
         self.pixels['THR_RMS_pretrim_DER'] = sigma
+        print('THR_pretrim',(datetime.now()-t1).total_seconds())
 
-        mean, sigma = derivative_THR(self.THRS)
+        t1 = datetime.now()
+        mean, sigma = derivative_THR(THRS)
         self.pixels['THR_Mean_DER'] = mean
         self.pixels['THR_RMS_DER'] = sigma
+        print('THR_posttrim',(datetime.now()-t1).total_seconds())
 
-        mean, sigma = derivative_CAL(self.CALS_pretrim)
+        t1 = datetime.now()
+        mean, sigma = derivative_CAL(CALS_pretrim)
         self.pixels['CAL_Mean_pretrim_DER'] = mean
         self.pixels['CAL_RMS_pretrim_DER'] = sigma
+        print('CAL_pretrim',(datetime.now()-t1).total_seconds())
 
-        mean, sigma = derivative_CAL(self.CALS)
+        t1 = datetime.now()
+        mean, sigma = derivative_CAL(CALS)
         self.pixels['CAL_Mean_DER'] = mean
         self.pixels['CAL_RMS_DER'] = sigma
+        print('CAL_posttrim',(datetime.now()-t1).total_seconds())
 
-        mean, sigma = derivative_CAL(self.BumpS)
+        t1 = datetime.now()
+        mean, sigma = derivative_CAL(BumpS)
         self.pixels['Bump_Mean_DER'] = mean
         self.pixels['Bump_RMS_DER'] = sigma
+        print('Bump',(datetime.now()-t1).total_seconds())
 
         return
 
@@ -424,7 +444,7 @@ def main():
             mapsa_names = [row[0] for row in reader]
     print(mapsa_names)
 
-    scurves = True
+    scurves = False
 
     for m in mapsa_names:
 

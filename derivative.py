@@ -3,6 +3,9 @@ import math
 
 def derivative_CAL(curve):
 
+    if np.sum(np.sum(curve)) == 0:
+        return -100, -100
+
     newcurve = curve.drop('256',axis=1)
 
     y = np.diff(newcurve,axis=-1)
@@ -23,12 +26,15 @@ def derivative_CAL(curve):
 
     # failures                                                                                                    
     failed = np.where(np.isnan(sigma))
-    mean[failed] = -100
-    sigma[failed] = -100
+    mean[failed] = np.nan
+    sigma[failed] = np.nan
 
     return mean, sigma
 
 def derivative_THR(curve,n_pulse=1000):
+
+    if np.sum(np.sum(curve)) == 0:
+        return -100, -100
 
     newcurve = curve.drop('256',axis=1)
 
@@ -36,7 +42,6 @@ def derivative_THR(curve,n_pulse=1000):
                          range(len(newcurve.transpose())) - np.full(len(newcurve.transpose()),n_pulse),
                          range(len(newcurve.transpose())))
 
-    flat_point = np.argmin(locations,axis=1)
     flat_point = np.repeat(np.argmin(locations,axis=1),len(newcurve.transpose())).reshape(newcurve.shape)
 
     curve_corrected = np.where(locations < flat_point + 5, 1000, newcurve)
@@ -60,7 +65,7 @@ def derivative_THR(curve,n_pulse=1000):
 
     # failures
     failed = np.where(np.isnan(sigma))
-    mean[failed] = -100
-    sigma[failed] = -100
+    mean[failed] = np.nan
+    sigma[failed] = np.nan
 
     return mean, sigma
