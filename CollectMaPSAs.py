@@ -3,22 +3,11 @@ import sys, os
 import csv
 import numpy as np
 import pandas as pd
-import matplotlib
-import matplotlib.pyplot as plt
 import cPickle
 from datetime import datetime
 
 from derivative import *
-import MakeModulePlots
-
-badchips = ["HPK34_1-1","HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14","QP_no13-10","QP_no14-5","QP_no18p2-14","QP_no27p1-13","QP_no24p1c-1","QuikPak_PS-p-P1-8","QuikPak_PS-p-P2_4-12"]
-
-plt.rc('font', size=22, weight='bold')
-plt.rc('axes', titlesize=22)#, labelsize=18)
-plt.rc('xtick', labelsize=16)
-plt.rc('ytick', labelsize=16)
-plt.rc('legend', fontsize=22)
-plt.rc('figure', titlesize=22)
+#import MakeModulePlots
 
 def get_recent(cmd):
 
@@ -242,7 +231,11 @@ class MPA:
         cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['mask'] = tmp['value']
-        self.pixels['mask'][self.pixels['pa']<100] = np.nan
+#        self.pixels['mask'][self.pixels['pa']<100] = np.nan
+
+        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_Trim_trimbits.csv'
+        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+        self.pixels['trimbits'] = tmp['value']
 
         return
 
@@ -265,31 +258,31 @@ class MPA:
         mean, sigma = derivative_THR(THRS_pretrim)
         self.pixels['THR_Mean_pretrim_DER'] = mean
         self.pixels['THR_RMS_pretrim_DER'] = sigma
-        print('THR_pretrim',(datetime.now()-t1).total_seconds())
+#        print('THR_pretrim',(datetime.now()-t1).total_seconds())
 
         t1 = datetime.now()
         mean, sigma = derivative_THR(THRS)
         self.pixels['THR_Mean_DER'] = mean
         self.pixels['THR_RMS_DER'] = sigma
-        print('THR_posttrim',(datetime.now()-t1).total_seconds())
+#        print('THR_posttrim',(datetime.now()-t1).total_seconds())
 
         t1 = datetime.now()
         mean, sigma = derivative_CAL(CALS_pretrim)
         self.pixels['CAL_Mean_pretrim_DER'] = mean
         self.pixels['CAL_RMS_pretrim_DER'] = sigma
-        print('CAL_pretrim',(datetime.now()-t1).total_seconds())
+#        print('CAL_pretrim',(datetime.now()-t1).total_seconds())
 
         t1 = datetime.now()
         mean, sigma = derivative_CAL(CALS)
         self.pixels['CAL_Mean_DER'] = mean
         self.pixels['CAL_RMS_DER'] = sigma
-        print('CAL_posttrim',(datetime.now()-t1).total_seconds())
+#        print('CAL_posttrim',(datetime.now()-t1).total_seconds())
 
         t1 = datetime.now()
         mean, sigma = derivative_CAL(BumpS)
         self.pixels['Bump_Mean_DER'] = mean
         self.pixels['Bump_RMS_DER'] = sigma
-        print('Bump',(datetime.now()-t1).total_seconds())
+#        print('Bump',(datetime.now()-t1).total_seconds())
 
         return
 
@@ -332,8 +325,8 @@ class MaPSA:
         cPickle.dump(self, mapsafile, protocol=-1)
         mapsafile.close()
 
-#        MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,show_plot=False,save_plot=True)
-
+        #MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,show_plot=False,save_plot=True)
+        
     def add_mpa(self, mpa):
         if(len(self.mpa_chips) >= 16):
             print("Error: MaPSA already has 16 associated MPAs")
@@ -367,65 +360,6 @@ class MaPSA:
         self.IV = df
 
         return 
-
-
-def MPA_registers(mapsas, outdir, log=True):
-
-    print("Processing " + str(len(mapsas)) + " MaPSAs register plots")
-
-    regerr_peri = [[],[]]
-    regerr_row = [[],[]]
-    regerr_pixel = [[],[]]
-
-    nchips_good = 0
-    nchips_bad = 0
-    for m in mapsas:
-        for chip in m.mpa_chips:
-            if chip.mapsa_name+"-"+str(chip.index) in badchips:
-                regerr_peri[0]  += [chip.regerr_peri]
-                regerr_row[0]   += [chip.regerr_row]
-                regerr_pixel[0] += [chip.regerr_pixel]
-                nchips_bad += 1
-            else:
-                regerr_peri[1]  += [chip.regerr_peri]
-                regerr_row[1]   += [chip.regerr_row]
-                regerr_pixel[1] += [chip.regerr_pixel]
-                nchips_good += 1
-
-    fig, (ax1,ax2,ax3) = plt.subplots(1,3,sharey=True)
-    plt.subplots_adjust(wspace=0, hspace=0)
-    fig.set_figheight(9)
-    fig.set_figwidth(12)
-
-    ax1.hist(np.array(regerr_peri),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='bar',stacked=True)
-    ax1.set_xlabel("Reg. Err. (Peri)",fontweight='bold')
-    ax1.set_ylabel("MPAs",fontweight='bold')
-
-    ax2.hist(np.array(regerr_row),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='bar',stacked=True)
-    ax2.set_xlabel("Reg. Err. (Row)",fontweight='bold')
-
-    ax3.hist(np.array(regerr_pixel),bins=[-2.5,-1.5,-0.5,0.5,1.5,2.5],histtype='bar',stacked=True)
-    ax3.set_xlabel("Reg. Err. (Pix)",fontweight='bold')
-
-    if log:
-        ax1.set(yscale='log',ylim=[0.1,1000])
-        ax2.set(yscale='log',ylim=[0.1,1000])
-        ax3.set(yscale='log',ylim=[0.1,1000])
-
-    plt.legend(["Bad MPA","Good MPA"],frameon=False)
-    plt.tight_layout()
-#    plt.show()
-
-    if log:
-        plt.savefig(outdir+"/Register_log.png",bbox_inches='tight')
-        plt.savefig(outdir+"/Register_log.pdf",bbox_inches='tight')
-    else:
-        plt.savefig(outdir+"/Register.png",bbox_inches='tight')
-        plt.savefig(outdir+"/Register.pdf",bbox_inches='tight')
-
-    plt.clf()
-
-    return
 
 def main():
 
