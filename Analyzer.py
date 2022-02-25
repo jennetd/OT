@@ -158,8 +158,8 @@ class Analyzer:
         outliersHighString = ""
         for strip in outliersHigh:
             outliersHighString += str(strip)+","
-        returnDict[varname+"NOutliersHigh"+varname] = len(outliersHigh)
-        returnDict[varname+"OutliersHigh"+varname] = outliersHighString
+        returnDict[varname+"NOutliersHigh"] = len(outliersHigh)
+        returnDict[varname+"OutliersHigh"] = outliersHighString
 
         return returnDict
         
