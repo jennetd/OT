@@ -64,7 +64,7 @@ class Analyzer:
             # Mask
             maskfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_mask_test.csv', chipName)
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(maskfile,'Unmaskable'))
-
+            
             # Trim
             trimfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_Trim_trimbits.csv', chipName)
             self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(trimfile,'Offset'))
@@ -72,31 +72,37 @@ class Analyzer:
 
             # Noise and Pedestal
             noisefile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_PostTrim_CAL_CAL_RMS.csv', chipName)
-            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(trimfile,'Noise'))
+            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(noisefile,'Noise'))
 
             pedestalfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_PostTrim_CAL_CAL_Mean.csv', chipName)
-            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(trimfile,'Pedestal'))
+            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(pedestalfile,'Pedestal'))
 
             # Bad bumps
             # number and list of bad bumps
 
     def getCurrent(self, logfile, varname, tag):
-        I = -1
-        if len(logfile) > 1:
-            cmd = "grep " + tag + " " + logfile
-            x = os.popen(cmd).read()
-            x = x.replace('I= ', 'CUT')
-            x = x.replace(' mA', 'CUT')
-            y = x.split('CUT')
-            I = float(y[1])
+        returnDict = {}
+        if len(logfile) <= 1:
+            return returnDict
+
+        cmd = "grep " + tag + " " + logfile
+        x = os.popen(cmd).read()
+        x = x.replace('I= ', 'CUT')
+        x = x.replace(' mA', 'CUT')
+        y = x.split('CUT')
+        I = float(y[1])
 
         # Add it to the dict
-        returnDict = {}
         returnDict[varname] = I
         return returnDict
         
     # Description
     def getNumberAndList(self, datafile, varname, threshold=5):
+        returnDict = {}
+
+        if len(datafile) <= 1:
+            return returnDict
+
         data = np.genfromtxt(datafile, delimiter=',')[:,1][1:]
 
         if varname == 'Dead':
@@ -113,7 +119,6 @@ class Analyzer:
             print(i)
             pixelString += str(i)+","
 
-        returnDict = {}
         returnDict["N"+varname+"Pix"] = len(indices)
         returnDict[varname+"Pix"] = pixelString
 
@@ -122,13 +127,16 @@ class Analyzer:
     # Extract useful info about noise given the part name and hist of noise / channel
     def getMeanStdOutliers(self, datafile, varname, threshold=5):
         # threshold = number of sigma away from mean that qualifies as "outlier"
-
-        data = np.genfromtxt(datafile, delimiter=',')[:,1][1:]
-
-        mean = sum(data)/len(data)
-        std  = (sum( [ ( (d-mean)**2) for d in data] ) / len(data) ) **0.5
-
         returnDict = {}
+
+        if len(datafile) <= 1:
+            return returnDict
+
+        data = np.genfromtxt(datafile, delimiter=',', dtype='float')[:,1][1:]
+
+        mean = np.mean(data)
+        std  = np.std(data)
+
         returnDict[varname+"Mean"] = mean
         returnDict[varname+"Std"] = std
         
