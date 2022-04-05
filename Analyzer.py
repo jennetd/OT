@@ -47,6 +47,7 @@ class Analyzer:
         NAbnormalCurrent = 0
         NUnmaskable = 0
         NNonOperational = 0
+        NNonOperationalPerChip = ""
 
         for i in range(1,17):
 
@@ -91,16 +92,19 @@ class Analyzer:
             # Bad bumps
             # number and list of bad bumps
             
-            nonOperational =[]
+            nonOperational = []
             for variable in ['DeadPix','InefficientPix','NoisyPix']: # Add untrimmable and bad bump
                 nonOperational += self.fResult.getResultValue([moduleName,chipName,variable]).split(',')[:-1]
             
+            nonOperational = np.unique(nonOperational)
             self.fResult.updateResult([moduleName,chipName],dict({'NNonOperational':len(nonOperational)}))
             NNonOperational += len(nonOperational)
+            NNonOperationalPerChip += str(len(nonOperational))+','
 
         self.fResult.updateResult([moduleName,'NAbnormalCurrentChips'],NAbnormalCurrent)
         self.fResult.updateResult([moduleName,'NUnmaskablePix'],NUnmaskable)
         self.fResult.updateResult([moduleName,'NNonOperationalPix'],NNonOperational)
+        self.fResult.updateResult([moduleName,'NNonOperationalPixPerChip'],NNonOperationalPerChip)
 
         IVData = self.getIVScan(testDir + '/IV.csv')
         self.fResult.updateResult([moduleName,'Iat600V'],np.array(IVData[IVData['V']==-600]['I'])[0])

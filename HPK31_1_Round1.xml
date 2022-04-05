@@ -526,5 +526,6 @@
    <Iat600V>-0.89</Iat600V>
    <NAbnormalCurrentChips>0</NAbnormalCurrentChips>
    <NNonOperationalPix>1</NNonOperationalPix>
+   <NNonOperationalPixPerChip>0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,</NNonOperationalPixPerChip>
    <NUnmaskablePix>0</NUnmaskablePix>
 </HPK31_1_Round1>
