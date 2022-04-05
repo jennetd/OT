@@ -1,6 +1,7 @@
 import Result
 import os, sys
 import numpy as np
+import pandas as pd
 from datetime import datetime
 
 class Analyzer:
@@ -43,6 +44,10 @@ class Analyzer:
 
         logfilesAllChips = []
 
+        NAbnormalCurrent = 0
+        NUnmaskable = 0
+        NNonOperational = 0
+
         for i in range(1,17):
 
             chipName = "Chip"+str(i)
@@ -54,17 +59,23 @@ class Analyzer:
             self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Idigital','P_dig'))
             self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Ipad','P_pad'))
             self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Itotal','Total: '))
+            
+            itotal = 200 #self.fResult.getResultValue([moduleName,chipName,'Itotal']) 
+            if itotal > 250 or itotal < 150:
+                NAbnormalCurrent += 1
 
             # Pixel alive
             # number and list of dead, ineffient, noisy
             pafile = self.getRecentFile(testDir + '/mpa_test_*_'+ chipName + '_*_pixelalive.csv', chipName)
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Dead'))
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Inefficient'))
+            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Noisy'))
 
             # Mask
             maskfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_mask_test.csv', chipName)
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(maskfile,'Unmaskable'))
-            
+            NUnmaskable += self.fResult.getResultValue([moduleName,chipName,'NUnmaskablePix'])
+
             # Trim
             trimfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_Trim_trimbits.csv', chipName)
             self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(trimfile,'Offset'))
@@ -79,6 +90,21 @@ class Analyzer:
 
             # Bad bumps
             # number and list of bad bumps
+            
+            nonOperational =[]
+            for variable in ['DeadPix','InefficientPix','NoisyPix']: # Add untrimmable and bad bump
+                nonOperational += self.fResult.getResultValue([moduleName,chipName,variable]).split(',')[:-1]
+            
+            self.fResult.updateResult([moduleName,chipName],dict({'NNonOperational':len(nonOperational)}))
+            NNonOperational += len(nonOperational)
+
+        self.fResult.updateResult([moduleName,'NAbnormalCurrentChips'],NAbnormalCurrent)
+        self.fResult.updateResult([moduleName,'NUnmaskablePix'],NUnmaskable)
+        self.fResult.updateResult([moduleName,'NNonOperationalPix'],NNonOperational)
+
+        IVData = self.getIVScan(testDir + '/IV.csv')
+        self.fResult.updateResult([moduleName,'Iat600V'],np.array(IVData[IVData['V']==-600]['I'])[0])
+
 
     def getCurrent(self, logfile, varname, tag):
         returnDict = {}
@@ -111,12 +137,14 @@ class Analyzer:
         elif varname == "Inefficient":
             indices = np.where((data<100) & (data>0))[0]
 
+        elif varname == "Noisy":
+            indices = np.where((data>100))[0]
+
         elif varname == "Unmaskable":
             indices = np.where(data > 0)[0]
 
         pixelString = ""
         for i in indices:
-            print(i)
             pixelString += str(i)+","
 
         returnDict["N"+varname+"Pix"] = len(indices)
@@ -164,9 +192,7 @@ class Analyzer:
         return returnDict
         
     # Extract useful info about the IV scan
-    def getIVScan(self, inputObject):
-        # do something
-        # edit the result
-        #self.fResult["breakdown"] = function on inputObject
-        return
+    def getIVScan(self, IVFile):
+
+        return pd.read_csv(IVFile,delimiter='\t',header=None,names=['V','I'])
 

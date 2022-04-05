@@ -32,3 +32,8 @@ class Result():
                 else:
                     thisDict[key] = value
                 
+    def getResultValue(self, keywords):
+        theDict = self.fResultDict
+        for key in keywords:
+            theDict = theDict[key]
+        return theDict
