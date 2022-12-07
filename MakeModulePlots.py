@@ -22,19 +22,39 @@ meansdT = []
 meansfC = []
 meansdC = []
 
-def errorf(x, *p):
-    a, mu, sigma = p
-    return 0.5*a*(1.0+erf((x-mu)/sigma))
-def line(x, *p):
-    g, offset = p
-    return  np.array(x) *g + offset
-def gauss(x, *p):
-    A, mu, sigma = p
-    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
-def errorfc(x, *p):
-    a, mu, sigma = p
-    return a*0.5*erfc((x-mu)/sigma)
+#def errorf(x, *p):
+#    a, mu, sigma = p
+#    return 0.5*a*(1.0+erf((x-mu)/sigma))
+#def line(x, *p):
+#    g, offset = p
+#    return  np.array(x) *g + offset
+#def gauss(x, *p):
+#    A, mu, sigma = p
+#    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+#def errorfc(x, *p):
+#    a, mu, sigma = p
+#    return a*0.5*erfc((x-mu)/sigma)
 np.set_printoptions(threshold=sys.maxsize)
+
+def get_recent(cmd):
+    files = os.popen(cmd).read().split()
+
+    if len(files) < 1:
+        print("Error: no files specified")
+        return "0"
+        
+    elif len(files) == 1:
+        return files[0]
+
+    else:
+        maxnbr = 0
+        maxidx = -1
+        for j, f in enumerate(files):
+            numbers_from_string = int(''.join(list(filter(str.isdigit, f))))
+            if numbers_from_string > maxnbr:
+                maxnbr = numbers_from_string
+                maxidx = j
+        return files[maxidx]
 
 def loadValuesFromCSV(csvfilename):
     #print(csvfilename)
@@ -80,170 +100,170 @@ def loadSCurvesFromCSV(csvfilename):
     #return scurvedict,start,stop,step
     return scurves,start,stop,step
 
-def extract_scurve_differentiate(s_curve,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
-    if nominal_DAC == -1:
-        if s_type=="THR":
-            nominal_DAC = 85
-        elif s_type=="CAL":
-            nominal_DAC = 15
-    rms  = -1
-    scurve = np.array(s_curve)
-    scurve = np.delete(scurve, -1)#last entry always a 0
-    step = min(int((stop-start)/len(scurve)),1)
-    DACvals = np.array(range(start,stop,step))
-    if len(DACvals) != len(scurve):
-        print("len(scurve) "+str(len(scurve))+", len(DACvals) "+str(len(DACvals)))
-        return -1,-1,False
-    differentiated = np.diff(scurve)/np.diff(DACvals)
-    minmaxs = []
-    if s_type == "THR":
-        minmaxs = (np.diff(np.sign(np.diff(differentiated))) > 0).nonzero()[0] + 1 # local min
-    elif s_type == "CAL":
-        minmaxs = (np.diff(np.sign(np.diff(differentiated))) < 0).nonzero()[0] + 1 # local max
+#def extract_scurve_differentiate(s_curve,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
+#    if nominal_DAC == -1:
+#        if s_type=="THR":
+#            nominal_DAC = 85
+#        elif s_type=="CAL":
+#            nominal_DAC = 15
+#    rms  = -1
+#    scurve = np.array(s_curve)
+#    scurve = np.delete(scurve, -1)#last entry always a 0
+#    step = min(int((stop-start)/len(scurve)),1)
+#    DACvals = np.array(range(start,stop,step))
+#    if len(DACvals) != len(scurve):
+#        print("len(scurve) "+str(len(scurve))+", len(DACvals) "+str(len(DACvals)))
+#        return -1,-1,False
+#    differentiated = np.diff(scurve)/np.diff(DACvals)
+#    minmaxs = []
+#    if s_type == "THR":
+#        minmaxs = (np.diff(np.sign(np.diff(differentiated))) > 0).nonzero()[0] + 1 # local min
+#    elif s_type == "CAL":
+#        minmaxs = (np.diff(np.sign(np.diff(differentiated))) < 0).nonzero()[0] + 1 # local max
 
-    scurvesvals = []
-    for i in minmaxs: scurvesvals.append(scurve[i])
-    meanpos = 0
-    if len(scurvesvals)>0:
-        meanpos = min(range(len(scurvesvals)), key=lambda i: abs(scurvesvals[i]-(n_pulse/2.)))
-    else:
-        #print("No s curve found.")
-        return -1,-1,False
-    if (minmaxs[meanpos] <= (start +1)) or (minmaxs[meanpos] >= (stop -1)):#no good position to extract 
-        return -1,-1,False
-    if scurve[meanpos]<0 or scurve[meanpos]>n_pulse:
-        return -1,-1,False
-    findmeanx = [DACvals[minmaxs[meanpos]-1],DACvals[minmaxs[meanpos]],DACvals[minmaxs[meanpos]+1]]
-    findmeany = [scurve[minmaxs[meanpos]-1],scurve[minmaxs[meanpos]],scurve[minmaxs[meanpos]+1]]
-    linefit = np.polyfit(findmeanx,findmeany,1)
-    if linefit[0] == 0:
-        print("Fit failed.")
-        return -1,-1,False
-    truemean = ((n_pulse/2)-linefit[1])/linefit[0]
-    closestpos_truemean = min(range(len(DACvals)), key=lambda i: abs(DACvals[i]-truemean))
-    sigma1 = False
-    #sigma1val = 0.21
-    sigma1val = 0.37
-    idx1_a = closestpos_truemean
-    idx1_b = closestpos_truemean
-    true1sigmaplus  = -1
-    true1sigmaminus = -1
-    while (not sigma1) and (idx1_a>0) and idx1_a < (len(DACvals)-2):#2 sigma
-        if abs(differentiated[idx1_a])<=sigma1val*abs(differentiated[closestpos_truemean]):
-            sigma1 = True
-            break
-        idx1_a += 1
-    sigma1 = False
-    if (idx1_a>0) and (idx1_a<(len(DACvals)-1)) and (abs(abs(differentiated[idx1_a-1])-sigma1val*n_pulse)<abs(abs(differentiated[idx1_a])-sigma1val*n_pulse)): idx1_a -= 1
-    while (not sigma1) and idx1_b > 0 and idx1_b < (len(DACvals)-2):#2 sigma
-        if abs(differentiated[idx1_b])<=sigma1val*abs(differentiated[closestpos_truemean]):
-            sigma1 = True
-            break
-        idx1_b -= 1
-    if (idx1_b>0) and (idx1_b<(len(DACvals)-1)) and (abs(abs(differentiated[idx1_b+1])-sigma1val*n_pulse)<abs(abs(differentiated[idx1_b])-sigma1val*n_pulse)): idx1_b -= 1
-    """
-    findmeanx = [DACvals[idx1_a-1],DACvals[idx1_a],DACvals[idx1_a+1]]
-    findmeany = [scurve[idx1_a-1],scurve[idx1_a],scurve[idx1_a+1]]
-    linefit = np.polyfit(findmeanx,findmeany,1)
-    if linefit[0] != 0:
-        if s_type == "THR":
-            true1sigmaplus = (n_pulse*0.0786496-linefit[1])/linefit[0]
-        if s_type == "CAL":
-            true1sigmaplus = (n_pulse*0.9213504-linefit[1])/linefit[0]
-    findmeanx = [DACvals[idx1_b-1],DACvals[idx1_b],DACvals[idx1_b+1]]
-    findmeany = [scurve[idx1_b-1],scurve[idx1_b],scurve[idx1_b+1]]
-    linefit = np.polyfit(findmeanx,findmeany,1)
-    if linefit[0] != 0:
-        if s_type == "THR":
-            true1sigmaminus = (n_pulse*0.9213504-linefit[1])/linefit[0]
-        if s_type == "CAL":
-            true1sigmaminus = (n_pulse*0.0786496-linefit[1])/linefit[0]
-    """
-    sigma2 = False
-    #sigma2val = 0.01
-    sigma2val = 0.018
-    idx2_a  = idx1_a
-    idx2_b  = idx1_b
-    true2sigmaplus  = -1
-    true2sigmaminus = -1
-    while (not sigma2) and (idx2_a>0) and idx2_a < (len(DACvals)-2):#2 sigma
-        if abs(differentiated[idx2_a])<=sigma2val*abs(differentiated[closestpos_truemean]):
-            sigma2 = True
-            break
-        idx2_a += 1
-    sigma2 = False
-    if (idx2_a>0) and (idx2_a<(len(DACvals)-1)) and (abs(abs(differentiated[idx2_a-1])-sigma2val*n_pulse)<abs(abs(differentiated[idx2_a])-sigma2val*n_pulse)): idx2_a -= 1
-    while (not sigma2) and idx2_b > 0 and idx2_b < (len(DACvals)-2):#2 sigma
-        if abs(differentiated[idx2_b])<=sigma2val*abs(differentiated[closestpos_truemean]):
-            sigma2 = True
-            break
-        idx2_b -= 1
-    if (idx2_b>0) and (idx2_b<(len(DACvals)-1)) and (abs(abs(differentiated[idx2_b+1])-sigma2val*n_pulse)<abs(abs(differentiated[idx2_b])-sigma2val*n_pulse)): idx2_b -= 1
-    """
-    findmeanx = [DACvals[idx2_a-1],DACvals[idx2_a],DACvals[idx2_a+1]]
-    findmeany = [scurve[idx2_a-1],scurve[idx2_a],scurve[idx2_a+1]]
-    linefit = np.polyfit(findmeanx,findmeany,1)
-    if linefit[0] != 0:
-        if s_type == "THR":
-            true2sigmaplus = (n_pulse*0.0023388-linefit[1])/linefit[0]
-        if s_type == "CAL":
-            true2sigmaplus = (n_pulse*0.9976611-linefit[1])/linefit[0]
-    findmeanx = [DACvals[idx2_b-1],DACvals[idx2_b],DACvals[idx2_b+1]]
-    findmeany = [scurve[idx2_b-1],scurve[idx2_b],scurve[idx2_b+1]]
-    linefit = np.polyfit(findmeanx,findmeany,1)
-    if linefit[0] != 0:
-        if s_type == "THR":
-            true2sigmaminus = (n_pulse*0.9976611-linefit[1])/linefit[0]
-        if s_type == "CAL":
-            true2sigmaminus = (n_pulse*0.0023388-linefit[1])/linefit[0]
-    """
-    #print(idx1_a,true1sigmaplus,"   ",idx1_b,true1sigmaminus, " --- ", idx2_a,true2sigmaplus,"   ",idx2_b,true2sigmaminus)
-    #print((true2sigmaplus-true2sigmaminus)/4,(true1sigmaplus-true1sigmaminus)/2)
-    return truemean,(DACvals[idx1_a]-DACvals[idx1_b])/2.,True
+#    scurvesvals = []
+#    for i in minmaxs: scurvesvals.append(scurve[i])
+#    meanpos = 0
+#    if len(scurvesvals)>0:
+#        meanpos = min(range(len(scurvesvals)), key=lambda i: abs(scurvesvals[i]-(n_pulse/2.)))
+#    else:
+#        #print("No s curve found.")
+#        return -1,-1,False
+#    if (minmaxs[meanpos] <= (start +1)) or (minmaxs[meanpos] >= (stop -1)):#no good position to extract 
+#        return -1,-1,False
+#    if scurve[meanpos]<0 or scurve[meanpos]>n_pulse:
+#        return -1,-1,False
+#    findmeanx = [DACvals[minmaxs[meanpos]-1],DACvals[minmaxs[meanpos]],DACvals[minmaxs[meanpos]+1]]
+#    findmeany = [scurve[minmaxs[meanpos]-1],scurve[minmaxs[meanpos]],scurve[minmaxs[meanpos]+1]]
+#    linefit = np.polyfit(findmeanx,findmeany,1)
+#    if linefit[0] == 0:
+#        print("Fit failed.")
+#        return -1,-1,False
+#    truemean = ((n_pulse/2)-linefit[1])/linefit[0]
+#    closestpos_truemean = min(range(len(DACvals)), key=lambda i: abs(DACvals[i]-truemean))
+#    sigma1 = False
+#    #sigma1val = 0.21
+#    sigma1val = 0.37
+#    idx1_a = closestpos_truemean
+#    idx1_b = closestpos_truemean
+#    true1sigmaplus  = -1
+#    true1sigmaminus = -1
+#    while (not sigma1) and (idx1_a>0) and idx1_a < (len(DACvals)-2):#2 sigma
+#        if abs(differentiated[idx1_a])<=sigma1val*abs(differentiated[closestpos_truemean]):
+#            sigma1 = True
+#            break
+#        idx1_a += 1
+#    sigma1 = False
+#    if (idx1_a>0) and (idx1_a<(len(DACvals)-1)) and (abs(abs(differentiated[idx1_a-1])-sigma1val*n_pulse)<abs(abs(differentiated[idx1_a])-sigma1val*n_pulse)):# idx1_a -= 1
+#    while (not sigma1) and idx1_b > 0 and idx1_b < (len(DACvals)-2):#2 sigma
+#        if abs(differentiated[idx1_b])<=sigma1val*abs(differentiated[closestpos_truemean]):
+#            sigma1 = True
+#            break
+#        idx1_b -= 1
+#    if (idx1_b>0) and (idx1_b<(len(DACvals)-1)) and (abs(abs(differentiated[idx1_b+1])-sigma1val*n_pulse)<abs(abs(differentiated[idx1_b])-sigma1val*n_pulse)):# idx1_b -= 1
+#    """
+#    findmeanx = [DACvals[idx1_a-1],DACvals[idx1_a],DACvals[idx1_a+1]]
+#    findmeany = [scurve[idx1_a-1],scurve[idx1_a],scurve[idx1_a+1]]
+##    linefit = np.polyfit(findmeanx,findmeany,1)
+#    if linefit[0] != 0:
+#        if s_type == "THR":
+#            true1sigmaplus = (n_pulse*0.0786496-linefit[1])/linefit[0]
+#        if s_type == "CAL":
+#            true1sigmaplus = (n_pulse*0.9213504-linefit[1])/linefit[0]
+#    findmeanx = [DACvals[idx1_b-1],DACvals[idx1_b],DACvals[idx1_b+1]]
+#    findmeany = [scurve[idx1_b-1],scurve[idx1_b],scurve[idx1_b+1]]
+#    linefit = np.polyfit(findmeanx,findmeany,1)
+#    if linefit[0] != 0:
+#        if s_type == "THR":
+#            true1sigmaminus = (n_pulse*0.9213504-linefit[1])/linefit[0]
+#        if s_type == "CAL":
+#            true1sigmaminus = (n_pulse*0.0786496-linefit[1])/linefit[0]
+#    """
+#    sigma2 = False
+#    #sigma2val = 0.01
+#    sigma2val = 0.018
+#    idx2_a  = idx1_a
+#    idx2_b  = idx1_b
+#    true2sigmaplus  = -1
+#    true2sigmaminus = -1
+#    while (not sigma2) and (idx2_a>0) and idx2_a < (len(DACvals)-2):#2 sigma
+#        if abs(differentiated[idx2_a])<=sigma2val*abs(differentiated[closestpos_truemean]):
+#            sigma2 = True
+#            break
+#        idx2_a += 1
+#    sigma2 = False
+#    if (idx2_a>0) and (idx2_a<(len(DACvals)-1)) and (abs(abs(differentiated[idx2_a-1])-sigma2val*n_pulse)<abs(abs(differentiated[idx2_a])-sigma2val*n_pulse)):# idx2_a -= 1
+#    while (not sigma2) and idx2_b > 0 and idx2_b < (len(DACvals)-2):#2 sigma
+#        if abs(differentiated[idx2_b])<=sigma2val*abs(differentiated[closestpos_truemean]):
+#            sigma2 = True
+#            break
+#        idx2_b -= 1
+#    if (idx2_b>0) and (idx2_b<(len(DACvals)-1)) and (abs(abs(differentiated[idx2_b+1])-sigma2val*n_pulse)<abs(abs(differentiated[idx2_b])-sigma2val*n_pulse)):# idx2_b -= 1
+#    """
+#    findmeanx = [DACvals[idx2_a-1],DACvals[idx2_a],DACvals[idx2_a+1]]
+#    findmeany = [scurve[idx2_a-1],scurve[idx2_a],scurve[idx2_a+1]]
+#    linefit = np.polyfit(findmeanx,findmeany,1)
+#    if linefit[0] != 0:
+#        if s_type == "THR":
+#            true2sigmaplus = (n_pulse*0.0023388-linefit[1])/linefit[0]
+##        if s_type == "CAL":
+#            true2sigmaplus = (n_pulse*0.9976611-linefit[1])/linefit[0]
+#    findmeanx = [DACvals[idx2_b-1],DACvals[idx2_b],DACvals[idx2_b+1]]
+#    findmeany = [scurve[idx2_b-1],scurve[idx2_b],scurve[idx2_b+1]]
+#    linefit = np.polyfit(findmeanx,findmeany,1)
+#    if linefit[0] != 0:
+#        if s_type == "THR":
+#            true2sigmaminus = (n_pulse*0.9976611-linefit[1])/linefit[0]
+#        if s_type == "CAL":
+#            true2sigmaminus = (n_pulse*0.0023388-linefit[1])/linefit[0]
+#    """
+#    #print(idx1_a,true1sigmaplus,"   ",idx1_b,true1sigmaminus, " --- ", idx2_a,true2sigmaplus,"   ",idx2_b,true2sigmaminus)
+#    #print((true2sigmaplus-true2sigmaminus)/4,(true1sigmaplus-true1sigmaminus)/2)
+#    return truemean,(DACvals[idx1_a]-DACvals[idx1_b])/2.,True
 
 
-def extract_scurve(s_curve,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
-    if nominal_DAC == -1:
-        if s_type=="THR":
-            nominal_DAC = 85
-        elif s_type=="CAL":
-            nominal_DAC = 15
-    mean = -1
-    rms  = -1
-    scurve = np.array(s_curve)
-    fitsuccess = True;
-    #print (s_type,n_pulse,nominal_DAC,start,stop)
-    try:
-        if s_type == "THR":
-            start_DAC = np.argmax(scurve)+10
-            while start_DAC <  (stop-start):
-                if math.fabs(scurve[start_DAC] - n_pulse) < math.sqrt(n_pulse):
-                    break
-                start_DAC += 1
-            if start_DAC >= stop-start-1:
-                start_DAC = min(np.argmax(scurve)+10,stop-start-5)    
-                #print("Fit Range (",start_DAC," to ", (stop-start), ") with initial parameters ", [n_pulse, nominal_DAC, 2],"for pixel",pixel)
-                #print("A",range(start_DAC, (stop-start)))
-                #print("B",scurve)
-            par, cov = curve_fit(errorfc, range(start_DAC, (stop-start)), scurve[start_DAC + 1 :(stop-start) + 1], p0= [n_pulse, (start_DAC+(stop-start))/2, 2])
-            #print("Paramters from fit ",par)
-            #print("Covariance ", cov)
-            mean = par[1]
-            rms  = par[2]
-        elif s_type == "CAL":
-            start_DAC = 0
-            #print("Fit Range (",start_DAC," to ", (stop-start), ") with initial parameters ", [n_pulse, nominal_DAC, 2])
-            par, cov = curve_fit(errorf,  range(start_DAC, (stop-start)), scurve[start_DAC + 1 :(stop-start) + 1], p0= [n_pulse, nominal_DAC, 2])
-            #print("Paramters from fit ",par)
-            #print("Covariance ", cov)
-            mean = par[1]
-            rms  = par[2]
-    except RuntimeError or TypeError:
-        fitsuccess = False
-        #print("Fit fails for input data")
-        #print(s_curve)
+#def extract_scurve(s_curve,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
+#    if nominal_DAC == -1:
+#        if s_type=="THR":
+#            nominal_DAC = 85
+#        elif s_type=="CAL":
+#            nominal_DAC = 15
+#    mean = -1
+#    rms  = -1
+#    scurve = np.array(s_curve)
+#    fitsuccess = True;
+#    #print (s_type,n_pulse,nominal_DAC,start,stop)
+#    try:
+#        if s_type == "THR":
+#            start_DAC = np.argmax(scurve)+10
+#            while start_DAC <  (stop-start):
+#                if math.fabs(scurve[start_DAC] - n_pulse) < math.sqrt(n_pulse):
+#                    break
+#                start_DAC += 1
+#            if start_DAC >= stop-start-1:
+#                start_DAC = min(np.argmax(scurve)+10,stop-start-5)    
+#                #print("Fit Range (",start_DAC," to ", (stop-start), ") with initial parameters ", [n_pulse, nominal_DAC, 2],"for pixel",pixel)
+#                #print("A",range(start_DAC, (stop-start)))
+#                #print("B",scurve)
+#            par, cov = curve_fit(errorfc, range(start_DAC, (stop-start)), scurve[start_DAC + 1 :(stop-start) + 1], p0= [n_pulse, (start_DAC+(stop-start))/2, 2#])
+#            #print("Paramters from fit ",par)
+#            #print("Covariance ", cov)
+#            mean = par[1]
+#            rms  = par[2]
+#        elif s_type == "CAL":
+#            start_DAC = 0
+#            #print("Fit Range (",start_DAC," to ", (stop-start), ") with initial parameters ", [n_pulse, nominal_DAC, 2])
+#            par, cov = curve_fit(errorf,  range(start_DAC, (stop-start)), scurve[start_DAC + 1 :(stop-start) + 1], p0= [n_pulse, nominal_DAC, 2])
+#            #print("Paramters from fit ",par)
+#            #print("Covariance ", cov)
+#            mean = par[1]
+#            rms  = par[2]
+#    except RuntimeError or TypeError:
+#        fitsuccess = False
+#        #print("Fit fails for input data")
+#        #print(s_curve)#
 
-    return mean,rms,fitsuccess
+#    return mean,rms,fitsuccess
 
 #def extract_meanrms_fromSCurves(scurves,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
 #    meandict = dict()
@@ -255,38 +275,14 @@ def extract_scurve(s_curve,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop
 #    return meandict,rmsdict
 
 #method using fit is default right now
-def extract_meanrms_fromSCurves(scurves,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
-    means = []
-    rmss = []
-    for s_curve in scurves:
-        mean,rms,fit = extract_scurve(s_curve=s_curve,s_type=s_type,n_pulse=n_pulse,nominal_DAC=nominal_DAC,start=start,stop=stop)
-        means.append(mean)
-        rmss.append(rms)
-    return means,rmss
-
-"""
-#test function to compare default (fit) with differentiation
-def extract_meanrms_fromSCurves(scurves,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
-    means = []
-    rmss = []
-    #print("TTT",len(scurves),type(scurves))
-    #print("TTTT",scurves)
-    for s_curve in scurves:
-        #print("SSSS",s_curve)
-        meanf,rmsf,fitf = extract_scurve(s_curve=s_curve,s_type=s_type,n_pulse=n_pulse,nominal_DAC=nominal_DAC,start=start,stop=stop)
-        meand,rmsd,fitd = extract_scurve_differentiate(s_curve=s_curve,s_type=s_type,n_pulse=n_pulse,nominal_DAC=nominal_DAC,start=start,stop=stop)
-        #print("1")
-        if s_type == "THR":
-            meansfT.append(meanf)
-            meansdT.append(meand)
-        elif s_type == "CAL":
-            meansfC.append(meanf)
-            meansdC.append(meand)
-        mean,rms,fit = extract_scurve(s_curve=s_curve,s_type=s_type,n_pulse=n_pulse,nominal_DAC=nominal_DAC,start=start,stop=stop)
-        means.append(mean)
-        rmss.append(rms)
-    return means,rmss
-"""
+#def extract_meanrms_fromSCurves(scurves,s_type="THR",n_pulse=1000,nominal_DAC=-1,start=0,stop=256):
+#    means = []
+#    rmss = []
+#    for s_curve in scurves:
+#        mean,rms,fit = extract_scurve(s_curve=s_curve,s_type=s_type,n_pulse=n_pulse,nominal_DAC=nominal_DAC,start=start,stop=stop)
+#        means.append(mean)
+#        rmss.append(rms)
+#    return means,rmss#
 
 def getRowOfMPAinMaPSAs(mpa,row):#this y
     #returns row id in a 2D map of a full MaPSA
@@ -439,28 +435,27 @@ def ModulePlot(inputs,isscurve=False,s_type="THR",n_pulse=1000,nominal_DAC=-1,do
     MakeModulePlot(arrays_of_data= data_arrays, row = [],col = [],nfig=17,hmin=hmin,hmax=hmax, percentile = percentile, plotAverage = plotAverage, identifier=identifier, data_label=data_label, test_label=test_label, israw = False, filename=filename, show_plot=show_plot, save_plot=save_plot)
 
 
+def Plot_Module(inpath="./",mapsa="MaPSA",base="pixelalive",chips=[],isscurve=False,s_type="THR",n_pulse=1000,nominal_DAC=-1,doMean=True,plotAverage = False, hmax=-1,hmin=-1, percentile = 0.05, identifier="ID-Test",data_label="Label-Test",test_label="Label-Test",outpath="./",filename="output", show_plot=True, save_plot=True):
 
-def Plot_Module(inpath="./",mapsa="MaPSA",base="pixelalive",modules=["chip1","chip2","chip3","chip4","chip5","chip6","chip7","chip8","chip9","chip10","chip11","chip12","chip13","chip14","chip15","chip16"],isscurve=False,s_type="THR",n_pulse=1000,nominal_DAC=-1,doMean=True,plotAverage = False, hmax=-1,hmin=-1, percentile = 0.05, identifier="ID-Test",data_label="Label-Test",test_label="Label-Test",outpath="./",filename="output", show_plot=True, save_plot=True):
+    if len(chips) < 1:
+        chips = [str(i) for i in range(1,17)]
     #print("Plot_Module(",inpath,mapsa,base,",".join(modules),isscurve,s_type,n_pulse,nominal_DAC,doMean,plotAverage,hmax,hmin,percentile,identifier,data_label,test_label,filename,show_plot,save_plot,")")
     inputs = []
-    for m in modules:
-        if not os.path.isfile(inpath+mapsa+"_"+m+"_"+base+".csv"):
-            print("Following file does not exists - do not plot module map:")
-            print(inpath+mapsa+"_"+m+"_"+base+".csv")
-            return
-        inputs.append(inpath+mapsa+"_"+m+"_"+base+".csv")
-    if outpath[-1] != '/': outpath = outpath + '/'
-    ModulePlot(inputs=inputs,isscurve=isscurve,s_type=s_type,n_pulse=n_pulse,nominal_DAC=nominal_DAC,doMean=doMean,plotAverage = plotAverage, hmax=hmax, hmin=hmin, percentile = percentile, identifier=identifier,data_label=data_label,test_label=test_label,filename=outpath+filename, show_plot=show_plot, save_plot=save_plot)
+    for m in chips:
+        cmd = 'ls '+ inpath + mapsa + '_' + m + '_*_'+base + '.csv'
+        inputs.append(get_recent(cmd))
 
-def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="",modules=["chip1","chip2","chip3","chip4","chip5","chip6","chip7","chip8","chip9","chip10","chip11","chip12","chip13","chip14","chip15","chip16"], show_plot=True, save_plot=True):
+    ModulePlot(inputs=inputs,isscurve=isscurve,s_type=s_type,doMean=doMean,plotAverage = plotAverage, hmax=hmax, hmin=hmin, identifier=identifier,data_label=data_label,test_label=test_label,filename=filename,show_plot=show_plot, save_plot=save_plot)
+
+def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="", show_plot=True, save_plot=True):
     #print("MakeAllPlotsOneModule(",inpath,mapsa,mapsaname,",".join(modules),show_plot,save_plot,")")
-    bases = ["BumpBonding_BadBumpVCal3","BumpBonding_BadBumpMap","BumpBonding_Noise_BadBump","mask_test","pixelalive","PostTrim_CAL_CAL_Mean","PostTrim_THR_THR_Mean","PostTrim_CAL_CAL_RMS","PostTrim_THR_THR_RMS"]
-    label = ["Bad Bump Test (through noise at BV = -2V)","Bad Bump Test (through noise at BV = -2V)","Identified abnormal pixel noise (at BV = -2V)","Pixel masking test","Pixel alive test","mean of CAL S Curve (post trimming)","mean of THR S Curve (post trimming)","rms of CAL S Curve (post trimming)","rms of THR S Curve (post trimming)"]
-    zlabel = ["is bad bump","is bad bump","noise [CAL] (at BV = -2V)","is maskeable","recorded pulses","mean [CAL]","mean [THR]","rms [CAL]","rms [THR]"]
-    isscurves = [False,False,False,False,False,False,False,False,False]
-    THR   =     ["",   "",   "",   "",   "",   "",   "",   "",   ""   ]
-    doMeans =   [ True, True, True, True, True, True, True, True, True]
-    Averaged =  [False,False,False,False,False, True, True, True, True]
+    bases = ["BumpBonding_BadBumpMap","BumpBonding_Noise_BadBump","mask_test","pixelalive","PostTrim_CAL_CAL_Mean","PostTrim_THR_THR_Mean","PostTrim_CAL_CAL_RMS","PostTrim_THR_THR_RMS"]
+    label = ["Bad Bump Test (through noise at BV = -2V)","Identified abnormal pixel noise (at BV = -2V)","Pixel masking test","Pixel alive test","mean of CAL S Curve (post trimming)","mean of THR S Curve (post trimming)","rms of CAL S Curve (post trimming)","rms of THR S Curve (post trimming)"]
+    zlabel = ["is bad bump","noise [CAL] (at BV = -2V)","is maskeable","recorded pulses","mean [CAL]","mean [THR]","rms [CAL]","rms [THR]"]
+    isscurves = [False,False,False,False,False,False,False,False]
+    THR   =     ["",   "",   "",   "",   "",   "",   "",   ""   ]
+    doMeans =   [ True, True, True, True, True, True, True, True]
+    Averaged =  [False,False,False,False, True, True, True, True]
     #print(mapsa)
     if mapsaname=="": mapsaname = mapsa
     for i in range(len(bases)):
@@ -473,44 +468,24 @@ def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="",modules=["chip1
         if "Noise_BadBump" in bases[i]: mymax = 10.
         elif "_Noise_" in bases[i]: mymax = 30.
         elif "BadBump" in bases[i]: mymax = 1.
-        outpath = inpath
-        if outpath[-1] != '/': outpath = outpath + '/'
-        Plot_Module(inpath=inpath,mapsa=mapsa,base=bases[i],modules=modules,isscurve=isscurves[i],s_type=THR[i],doMean=doMeans[i],data_label=zlabel[i],test_label=label[i],identifier=mapsaname,filename=outpath+mapsa+"_"+mybase,plotAverage=Averaged[i],hmax=mymax,show_plot=show_plot,save_plot=save_plot)
+        outpath = './plots'
+        if outpath[-1] != '/': 
+            outpath = outpath + '/'
+        Plot_Module(inpath=inpath,mapsa=mapsa,base=bases[i],isscurve=isscurves[i],s_type=THR[i],doMean=doMeans[i],data_label=zlabel[i],test_label=label[i],identifier=mapsaname,filename=outpath+mapsa+"_"+mybase,plotAverage=Averaged[i],hmax=mymax,show_plot=show_plot,save_plot=save_plot)
 
 def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
     moduleid = "mpa_test_"+modulename
     thepath = "../Results_MPATesting/"+modulename+"/"
-    if not os.path.isdir(thepath):
-        print("The directory  "+thepath+"  does not exist - cannot plot module maps.")
-        return
+#    if not os.path.isdir(thepath):
+#        print("The directory  "+thepath+"  does not exist - cannot plot module maps.")
+#        return
     chipnames  = ['','','','','','','','','','','','','','','','']
-    for i in range(0,16):
-        teststring = moduleid + "_Chip" + str(i+1)+"_"
-        filelist = glob.glob(thepath+teststring+"*.csv")
-        maxstr = "" #string with highest number
-        maxnbr = 0
-        for f in filelist:
-            if "BumpBondingAtBV" in f: continue
-            numbers_from_string = filter(str.isdigit, f)
-            if numbers_from_string > maxnbr:
-                maxnbr = numbers_from_string
-                maxstr = f
-        #print(maxstr)
+#    for i in range(0,16):
+#        teststring = moduleid + "_"
+#        cmd = thepath+teststring+'*.csv'
+#        inpath = get_recent(cmd)
 
-        reducedmaxstr = maxstr[maxstr.find('Chip'):-4]#ensure that I don't make a mistake given that AEMTec have one number, and HPK have 2 numbers
-        #print(reducedmaxstr)
-        numberlist = re.findall('\d+', reducedmaxstr )
-        if len(numberlist)>=7:#1 chip + 6 date
-            chipstring = "Chip"+numberlist[0]
-            for j in range(1,7):
-                chipstring += "_" + numberlist[j]
-            #print(chipstring)
-            chipnames[i] = chipstring
-        else:
-            print("Could not find any csv file for chip "+ str(i+1)+" for the module "+modulename)
-            return
-    #print(chipnames)
-    MakeAllPlotsOneModule(inpath=thepath,mapsa=moduleid,mapsaname=modulename,modules=chipnames, show_plot=show_plot, save_plot=save_plot)
+    MakeAllPlotsOneModule(inpath=thepath,mapsa=moduleid,mapsaname=modulename, show_plot=show_plot, save_plot=save_plot)
 
 def PlotAllPlotsModulesAutomated(name, show_plot=True, save_plot=True):
     PlotAllPlotsOneModuleAutomated(name,show_plot=show_plot, save_plot=save_plot)
@@ -522,13 +497,5 @@ def PlotAllPlotsAllModule(show_plot=True, save_plot=True):
     for m in modulenames:
         PlotAllPlotsOneModule(m,show_plot=show_plot,save_plot=save_plot)
 
-#PlotAllPlotsOneModule("AEMTec2",show_plot=True,save_plot=True)
-#PlotAllPlotsOneModule("HPK19_1",show_plot=False,save_plot=True)
-#PlotAllPlotsOneModule("HPK25_2",show_plot=False,save_plot=True)
 
-#PlotAllPlotsAllModule(show_plot=True,save_plot=True)
-#PlotAllPlotsOneModuleAutomated("AEMTec2",show_plot=False,save_plot=True)
-#PlotAllPlotsOneModuleAutomated("HPK31_1",show_plot=False,save_plot=True)
-#PlotAllPlotsOneModuleAutomated("QuikPak_PS-p-P2",show_plot=False,save_plot=True)
-#PlotAllPlotsOneModuleAutomated("QuikPak_PS-p-P1",show_plot=False,save_plot=True)
-#PlotAllPlotsModulesAutomated(show_plot=False, save_plot=True)
+#PlotAllPlotsOneModuleAutomated("AEM79L",show_plot=False,save_plot=True)

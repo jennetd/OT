@@ -7,7 +7,7 @@ import cPickle
 from datetime import datetime
 
 from derivative import *
-#import MakeModulePlots
+import MakeModulePlots
 
 def get_recent(cmd):
 
@@ -37,9 +37,9 @@ class MPA:
     def __init__(self, mapsa_name, chip_number, scurves):
         self.mapsa_name = mapsa_name
         self.index = chip_number
-        self.directory = '/uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/' + mapsa_name + '/'
+        self.directory = '/home/fnaltest/MPAv2/Results_MPATesting/' + mapsa_name + '/'
 
-        cmd = 'ls '+ self.directory +'log*_Chip'+ str(self.index) +'_*.log'
+        cmd = 'ls '+ self.directory +'log*_'+ str(self.index) +'_*.log'
         self.log_file = get_recent(cmd)
 
         self.fill_pixels()
@@ -50,8 +50,8 @@ class MPA:
             self.set_Scurves()
         else:
             self.set_currents()
-            self.set_memerrs()
-            self.set_regerrs()
+#            self.set_memerrs()
+#            self.set_regerrs()
 
     def set_currents(self):
 
@@ -106,8 +106,8 @@ class MPA:
 
         # Peri errors
         cmd = "grep 'Total MPA errors:' " + self.log_file
-        if self.mapsa_name == "QP_no27p1" and self.index == 13:
-            cmd = "grep 'Total MPA errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
+#        if self.mapsa_name == "QP_no27p1" and self.index == 13:
+#            cmd = "grep 'Total MPA errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
 
         x = os.popen(cmd).read()
         y = x.split()[-1]
@@ -115,8 +115,8 @@ class MPA:
 
         # Row errors              
         cmd = "grep 'Total row errors:' " + self.log_file
-        if self.mapsa_name == "QP_no27p1" and self.index == 13:
-            cmd = "grep 'Total row errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
+#        if self.mapsa_name == "QP_no27p1" and self.index == 13:
+#            cmd = "grep 'Total row errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
 
         x = os.popen(cmd).read()
         y = x.split()[-1]
@@ -124,8 +124,8 @@ class MPA:
 
         # Pixel errors              
         cmd = "grep 'Total pixel errors:' " + self.log_file
-        if self.mapsa_name == "QP_no27p1" and self.index == 13:
-            cmd = "grep 'Total pixel errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
+#        if self.mapsa_name == "QP_no27p1" and self.index == 13:
+#            cmd = "grep 'Total pixel errors:' /uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/QP_no27p1/log_mpa_test_QP_no27p1_Chip13_2021_03_22_14_12_54.log"
 
         x = os.popen(cmd).read()
         y = x.split()[-1]
@@ -137,7 +137,7 @@ class MPA:
 
         df = pd.DataFrame(index=['1.0V','1.2V'],columns=['error','stuck','I2C','missing'])
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+ str(self.index) + '_*_Mem105_Summary.csv' 
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+ str(self.index) + '_*_Mem105_Summary.csv' 
         csvfilename = get_recent(cmd)
         if csvfilename != "0":
             with open(csvfilename, 'r') as f:
@@ -150,7 +150,7 @@ class MPA:
                     df['I2C']['1.0V'] = float(row[0])
                     df['missing']['1.0V'] = float(row[0])
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+ str(self.index) + '_*_Mem125_Summary.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+ str(self.index) + '_*_Mem125_Summary.csv'
         csvfilename = get_recent(cmd)
         if csvfilename != "0":
             with open(csvfilename, 'r') as f:
@@ -170,88 +170,88 @@ class MPA:
 
     def fill_pixels(self):
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+ str(self.index) + '_*_pixelalive.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+ str(self.index) + '_*_pixelalive.csv'
         self.pixels = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         self.pixels.columns = ['pa']
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_RMS.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PostTrim_CAL_CAL_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_RMS'] = tmp['value']
         self.pixels['CAL_RMS'][abs(self.pixels['CAL_RMS']-2.0)<0.000001] = -1
         self.pixels['CAL_RMS'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_CAL_CAL_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PostTrim_CAL_CAL_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_Mean'] = tmp['value']
         self.pixels['CAL_Mean'][self.pixels['CAL_RMS']<0] = np.nan
         self.pixels['CAL_Mean'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_RMS.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PostTrim_THR_THR_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_RMS'] = tmp['value']
         self.pixels['THR_RMS'][abs(self.pixels['THR_RMS']-2.0)<0.000001] = -1
         self.pixels['THR_RMS'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PostTrim_THR_THR_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PostTrim_THR_THR_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_Mean'] = tmp['value']
         self.pixels['THR_Mean'][self.pixels['THR_RMS']<0] = np.nan
         self.pixels['THR_Mean'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_RMS_pretrim'] = tmp['value']
         self.pixels['CAL_RMS_pretrim'][abs(self.pixels['CAL_RMS_pretrim']-2.0)<0.00001] = -1
         self.pixels['CAL_RMS_pretrim'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['CAL_Mean_pretrim'] = tmp['value']
         self.pixels['CAL_Mean_pretrim'][self.pixels['CAL_RMS_pretrim']<0] = np.nan
         self.pixels['CAL_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_RMS_pretrim'] = tmp['value']
         self.pixels['THR_RMS_pretrim'][abs(self.pixels['THR_RMS_pretrim']-2.0)<0.000001] = -1
         self.pixels['THR_RMS_pretrim'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['THR_Mean_pretrim'] = tmp['value']
         self.pixels['THR_Mean_pretrim'][self.pixels['THR_RMS_pretrim']<0] = np.nan
         self.pixels['THR_Mean_pretrim'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_BumpBonding_Noise_BadBump.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_BumpBonding_Noise_BadBump.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['Bump_RMS'] = tmp['value']
         self.pixels['Bump_RMS'][abs(self.pixels['Bump_RMS']-2.0)<0.000001] = -1
         self.pixels['Bump_RMS'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_mask_test.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_mask_test.csv'
         tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
         self.pixels['mask'] = tmp['value']
 #        self.pixels['mask'][self.pixels['pa']<100] = np.nan
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) + '_*_Trim_trimbits.csv'
-        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-        self.pixels['trimbits'] = tmp['value']
+#        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_Trim_trimbits.csv'
+#        tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+#        self.pixels['trimbits'] = tmp['value']
 
         return
 
     def add_derivative(self):
         
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_CAL_CAL.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PostTrim_CAL_CAL.csv'
         CALS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_THR_THR.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PostTrim_THR_THR.csv'
         THRS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_CAL_CAL.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PreTrim_CAL_CAL.csv'
         CALS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_THR_THR.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PreTrim_THR_THR.csv'
         THRS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_BumpBonding_SCurve_BadBump.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_BumpBonding_SCurve_BadBump.csv'
         BumpS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
         t1 = datetime.now()
@@ -289,17 +289,17 @@ class MPA:
     # S curves
     def set_Scurves(self):
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_CAL_CAL.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PostTrim_CAL_CAL.csv'
         self.CALS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PostTrim_THR_THR.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PostTrim_THR_THR.csv'
         self.THRS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_CAL_CAL.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PreTrim_CAL_CAL.csv'
         self.CALS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_PreTrim_THR_THR.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_PreTrim_THR_THR.csv'
         self.THRS_pretrim = pd.read_csv(get_recent(cmd),index_col=0,header=0)
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_Chip'+str(self.index) +'_*_BumpBonding_SCurve_BadBump.csv'
+        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) +'_*_BumpBonding_SCurve_BadBump.csv'
         self.BumpS = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         
         return
@@ -310,7 +310,7 @@ class MaPSA:
 
         # Set some properties
         self.name = name
-        self.directory = '/uscms/home/jennetd/nobackup/mapsa-round2/Results_MPATesting/' + self.name + '/'
+        self.directory = '/home/fnaltest/MPAv2/Results_MPATesting/' + self.name + '/'
         self.mpa_chips = []
         self.set_IV()
 
@@ -325,7 +325,7 @@ class MaPSA:
         cPickle.dump(self, mapsafile, protocol=-1)
         mapsafile.close()
 
-        #MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,show_plot=False,save_plot=True)
+        MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,show_plot=False,save_plot=True)
         
     def add_mpa(self, mpa):
         if(len(self.mpa_chips) >= 16):
@@ -338,12 +338,13 @@ class MaPSA:
         return
 
     def set_IV(self):
-        csvfilename = self.directory+'IV.csv'
+        csvfilename = self.directory+'IVScan_'+self.name+'.csv'
         Vpoints = []
         Ipoints = []
         with open(csvfilename, 'r') as f:
-            reader = csv.reader(f, delimiter='\t')
+            reader = csv.reader(f, delimiter=',')
             for row in reader:
+
                 if row[0] == '':
                     continue
 
