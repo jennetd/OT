@@ -469,7 +469,9 @@ def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="", show_plot=True
         if "Noise_BadBump" in bases[i]: mymax = 10.
         elif "_Noise_" in bases[i]: mymax = 30.
         elif "BadBump" in bases[i]: mymax = 1.
-        outpath = './plots'
+        outpath = './plots/'+mapsaname
+        if not os.path.exists(outpath):
+            os.mkdir(outpath)
         if outpath[-1] != '/': 
             outpath = outpath + '/'
         Plot_Module(inpath=inpath,mapsa=mapsa,base=bases[i],isscurve=isscurves[i],s_type=THR[i],doMean=doMeans[i],data_label=zlabel[i],test_label=label[i],identifier=mapsaname,filename=outpath+mapsaname+"_"+mybase,plotAverage=Averaged[i],hmax=mymax,show_plot=show_plot,save_plot=save_plot)
