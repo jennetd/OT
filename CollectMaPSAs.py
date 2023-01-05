@@ -3,11 +3,14 @@ import sys, os
 import csv
 import numpy as np
 import pandas as pd
-import cPickle
+import pickle
 from datetime import datetime
 
 from derivative import *
 import MakeModulePlots
+
+import warnings
+warnings.filterwarnings("ignore")
 
 def get_recent(cmd):
 
@@ -25,11 +28,12 @@ def get_recent(cmd):
     else:
         maxnbr = 0
         maxidx = -1
+
         for j, f in enumerate(files):
-            numbers_from_string = filter(str.isdigit, f)                                          
-            if numbers_from_string > maxnbr:                                                            
-                maxnbr = numbers_from_string                                                        
-                maxidx = j        
+            numbers_from_string = int(''.join(list(filter(str.isdigit, f))))
+            if numbers_from_string > maxnbr:
+                maxnbr = numbers_from_string
+                maxidx = j
         return files[maxidx]
 
 class MPA:
@@ -37,7 +41,7 @@ class MPA:
     def __init__(self, mapsa_name, chip_number, scurves):
         self.mapsa_name = mapsa_name
         self.index = chip_number
-        self.directory = '/home/fnaltest/MPAv2/Results_MPATesting/' + mapsa_name + '/'
+        self.directory = '../Results_MPATesting/' + mapsa_name + '/'
 
         cmd = 'ls '+ self.directory +'log*_'+ str(self.index) +'_*.log'
         self.log_file = get_recent(cmd)
@@ -306,11 +310,12 @@ class MPA:
 
 class MaPSA:
     """MaPSA class"""
-    def __init__(self, name, scurves=False):
+    def __init__(self, name, label, scurves=False):
 
         # Set some properties
         self.name = name
-        self.directory = '/home/fnaltest/MPAv2/Results_MPATesting/' + self.name + '/'
+        self.label = label
+        self.directory = '../Results_MPATesting/' + self.name + '/'
         self.mpa_chips = []
         self.set_IV()
 
@@ -321,11 +326,11 @@ class MaPSA:
         
         # Pickle it
         print("Pickling MaPSA " + self.name)
-        mapsafile = open('pickles/'+self.name+'.pkl', 'wb')
-        cPickle.dump(self, mapsafile, protocol=-1)
+        mapsafile = open('pickles/'+self.label+'.pkl', 'wb')
+        pickle.dump(self, mapsafile, protocol=-1)
         mapsafile.close()
 
-        MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,show_plot=False,save_plot=True)
+        MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,mapsaname=self.label,show_plot=False,save_plot=True)
         
     def add_mpa(self, mpa):
         if(len(self.mpa_chips) >= 16):
@@ -370,26 +375,29 @@ def main():
     args = parser.parse_args()
 
     mapsa_names = []
+    mapsa_labels = []
     mapsas = []
     
     for f1 in args.files:
         print('Reading MaPSA names from ' + f1)
         with open(f1) as f:
-            reader = csv.reader(f)
-            mapsa_names = [row[0] for row in reader]
-    print(mapsa_names)
+            reader = csv.reader(f,delimiter=' ')
+            mapsa_info = [row for row in reader]
+            mapsa_names = [row[0] for row in mapsa_info]
+            mapsa_labels = [row[1] for row in mapsa_info]
+    print(mapsa_labels)
 
-    scurves = False
+    scurves = True
 
-    for m in mapsa_names:
+    for i in range(len(mapsa_names)):
 
         # Read MaPSA object from file, if available
-        fname = 'pickles/'+m+'.pkl'
+        fname = 'pickles/'+mapsa_labels[i]+'.pkl'
         if os.path.isfile(fname):
-            print("Loading MaPSA " + m)
-            mapsa = cPickle.load(open(fname,'rb'))
+            print("Loading MaPSA " + mapsa_labels[i])
+            mapsa = pickle.load(open(fname,'rb'))
         else: # Create it
-            mapsa = MaPSA(m,scurves)
+            mapsa = MaPSA(mapsa_names[i],mapsa_labels[i],scurves)
 
         mapsas += [mapsa]
 
