@@ -457,7 +457,8 @@ def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="", show_plot=True
     doMeans =   [ True, True, True, True, True, True, True, True]
     Averaged =  [False,False,False,False, True, True, True, True]
     #print(mapsa)
-    if mapsaname=="": mapsaname = mapsa
+    if len(mapsaname) < 1:
+        mapsaname = mapsa
     for i in range(len(bases)):
         #if i > 1: continue
         mybase = bases[i]
@@ -471,10 +472,13 @@ def MakeAllPlotsOneModule(inpath="./",mapsa="MaPSA",mapsaname="", show_plot=True
         outpath = './plots'
         if outpath[-1] != '/': 
             outpath = outpath + '/'
-        Plot_Module(inpath=inpath,mapsa=mapsa,base=bases[i],isscurve=isscurves[i],s_type=THR[i],doMean=doMeans[i],data_label=zlabel[i],test_label=label[i],identifier=mapsaname,filename=outpath+mapsa+"_"+mybase,plotAverage=Averaged[i],hmax=mymax,show_plot=show_plot,save_plot=save_plot)
+        Plot_Module(inpath=inpath,mapsa=mapsa,base=bases[i],isscurve=isscurves[i],s_type=THR[i],doMean=doMeans[i],data_label=zlabel[i],test_label=label[i],identifier=mapsaname,filename=outpath+mapsaname+"_"+mybase,plotAverage=Averaged[i],hmax=mymax,show_plot=show_plot,save_plot=save_plot)
 
-def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
+def PlotAllPlotsOneModuleAutomated(modulename, mapsaname="mapsa", show_plot=True, save_plot=True):
     moduleid = "mpa_test_"+modulename
+    if len(mapsaname) < 1:
+        mapsaname = modulename
+
     thepath = "../Results_MPATesting/"+modulename+"/"
 #    if not os.path.isdir(thepath):
 #        print("The directory  "+thepath+"  does not exist - cannot plot module maps.")
@@ -485,10 +489,10 @@ def PlotAllPlotsOneModuleAutomated(modulename, show_plot=True, save_plot=True):
 #        cmd = thepath+teststring+'*.csv'
 #        inpath = get_recent(cmd)
 
-    MakeAllPlotsOneModule(inpath=thepath,mapsa=moduleid,mapsaname=modulename, show_plot=show_plot, save_plot=save_plot)
+    MakeAllPlotsOneModule(inpath=thepath,mapsa=moduleid,mapsaname=mapsaname,show_plot=show_plot, save_plot=save_plot)
 
-def PlotAllPlotsModulesAutomated(name, show_plot=True, save_plot=True):
-    PlotAllPlotsOneModuleAutomated(name,show_plot=show_plot, save_plot=save_plot)
+def PlotAllPlotsModulesAutomated(name, mapsaname="", show_plot=True, save_plot=True):
+    PlotAllPlotsOneModuleAutomated(name, mapsaname=mapsaname, show_plot=show_plot, save_plot=save_plot)
     return
 
 def PlotAllPlotsAllModule(show_plot=True, save_plot=True):
