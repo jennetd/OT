@@ -3,7 +3,6 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from math import erfc
-from pathlib import Path
 import sys, os
 
 # Jennet has stolen most of this from Ginger and Andreas

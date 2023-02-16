@@ -195,7 +195,7 @@ def current_plot():
     nchips_good = 0
     nchips_bad = 0
 
-    minval = -10
+    minval = 0
     maxval = 1000
 
     for m in mapsas:
@@ -215,7 +215,7 @@ def current_plot():
 
     for c in I.keys():
 
-        bins = np.linspace(-10,1000,20)
+        bins = np.linspace(0,300,20)
 
         # Linear scale
         fig1 = stacked_hist(I[c][0],I[c][1],bins,Inames[c],"MPAs",logmax=0)
@@ -427,21 +427,26 @@ def main():
     outdir = name+"-plots"
     if name == "HPK":
         vendor = "Vendor 1"
-        infile = "round2tot-HPK.txt"
-    elif name == "HPKredclean":
-        vendor = "Vendor 1 (reduced cleaning)"
-        infile = "round2redclean-HPK.txt"
+        infile = "hpk-round3.txt"
     elif name == "QPT":
         vendor = "Vendor 2"     
-        infile = "round2abcde-QuikPak.txt"
+#        infile = "round2abcde-QuikPak.txt"
+    elif name == "AEM":
+        vendor = "Vendor 3"
+        infile = "aem-round3.txt"
+    elif name == "AEM-kapton":
+        vendor = "AEM (w kapton)"
+        infile = "aem-round3-kapton.txt"
     else:
         print("Invalid vendor name")
 
     # Load MaPSAs
     print('Reading MaPSA names from ' + infile)
+
     with open(infile) as f:
-        reader = csv.reader(f)
-        mapsa_names += [row[0] for row in reader]
+        reader = csv.reader(f,delimiter=' ')
+        mapsa_info = [row for row in reader]
+        mapsa_names = [row[0] for row in mapsa_info]
 
     for m in mapsa_names:
         fname = 'pickles/'+m+'.pkl'
@@ -449,7 +454,9 @@ def main():
             print("Loading MaPSA " + m)
             mapsa = cPickle.load(open(fname,'rb'))
         else: 
-            mapsa = MaPSA(m)
+#            mapsa = MaPSA(m)
+            print("Missing pickle for ", m)
+
         mapsas += [mapsa]
 
     # Make plots
@@ -463,8 +470,8 @@ def main():
 
     IV_plot()
     current_plot()
-    memory_plot()
-    register_plot()
+#    memory_plot()
+#    register_plot()
 
     # Pixel plots
     global allpix
@@ -512,7 +519,7 @@ def main():
 
         pixel_plot("pa","Response to 100 pulses",np.linspace(-20,220,60))
         pixel_plot("mask","is unmaskable",np.linspace(-1.5,1.5,4))
-        pixel_plot("trimbits","Trim bits",np.linspace(-20,60,16))
+#        pixel_plot("trimbits","Trim bits",np.linspace(-20,60,16))
     
         # Threshold and noise
         pixel_plot("CAL_Mean","CAL mean",np.linspace(-24,256,60))
@@ -529,47 +536,47 @@ def main():
         
         pixel_plot("Bump_RMS","Bump test noise at -2V",np.linspace(-2,10,60))
         
-        pixel_plot("CAL_Mean_DER","CAL mean (der method)",np.linspace(-24,256,60))
-        pixel_plot("CAL_RMS_DER","CAL noise (der method)",np.linspace(-2,10,60))
+#        pixel_plot("CAL_Mean_DER","CAL mean (der method)",np.linspace(-24,256,60))
+#        pixel_plot("CAL_RMS_DER","CAL noise (der method)",np.linspace(-2,10,60))
         
-        pixel_plot("THR_Mean_DER","THR mean (der method)",np.linspace(-24,256,60))
-        pixel_plot("THR_RMS_DER","THR noise (der method)",np.linspace(-2,10,60))
+#        pixel_plot("THR_Mean_DER","THR mean (der method)",np.linspace(-24,256,60))
+#        pixel_plot("THR_RMS_DER","THR noise (der method)",np.linspace(-2,10,60))
         
-        pixel_plot("CAL_Mean_pretrim_DER","CAL mean (pretrim, der method)",np.linspace(-24,256,60))
-        pixel_plot("CAL_RMS_pretrim_DER","CAL noise (pretrim, der method)",np.linspace(-2,10,60))
+#        pixel_plot("CAL_Mean_pretrim_DER","CAL mean (pretrim, der method)",np.linspace(-24,256,60))
+#        pixel_plot("CAL_RMS_pretrim_DER","CAL noise (pretrim, der method)",np.linspace(-2,10,60))
         
-        pixel_plot("THR_Mean_pretrim_DER","THR mean (pretrim, der method)",np.linspace(-24,256,60))
-        pixel_plot("THR_RMS_pretrim_DER","THR noise (pretrim, der method)",np.linspace(-2,10,60))
+#        pixel_plot("THR_Mean_pretrim_DER","THR mean (pretrim, der method)",np.linspace(-24,256,60))
+#        pixel_plot("THR_RMS_pretrim_DER","THR noise (pretrim, der method)",np.linspace(-2,10,60))
         
-        pixel_plot("Bump_RMS_DER","Bump test noise at -2V (der method)",np.linspace(-2,10,60))
+#        pixel_plot("Bump_RMS_DER","Bump test noise at -2V (der method)",np.linspace(-2,10,60))
 
     if 1: # overlay plots
 
         pixel_overlay("CAL_Mean","CAL_Mean_pretrim","CAL Mean",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
         pixel_overlay("THR_Mean","THR_Mean_pretrim","THR Mean",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
-        pixel_overlay("CAL_Mean_DER","CAL_Mean_pretrim_DER","CAL Mean (der method)",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
-        pixel_overlay("THR_Mean_DER","THR_Mean_pretrim_DER","THR Mean (der method)",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
+#        pixel_overlay("CAL_Mean_DER","CAL_Mean_pretrim_DER","CAL Mean (der method)",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
+#        pixel_overlay("THR_Mean_DER","THR_Mean_pretrim_DER","THR Mean (der method)",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
         
         pixel_overlay("CAL_RMS","CAL_RMS_pretrim","CAL RMS",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
         pixel_overlay("THR_RMS","THR_RMS_pretrim","THR RMS",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
-        pixel_overlay("CAL_RMS_DER","CAL_RMS_pretrim_DER","CAL RMS (der method)",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
-        pixel_overlay("THR_RMS_DER","THR_RMS_pretrim_DER","THR RMS (der method)",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
+#        pixel_overlay("CAL_RMS_DER","CAL_RMS_pretrim_DER","CAL RMS (der method)",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
+#        pixel_overlay("THR_RMS_DER","THR_RMS_pretrim_DER","THR RMS (der method)",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
         
         pixel_overlay("CAL_Mean","CAL_Mean_DER","CAL Mean",["Fit","Der"],np.linspace(-24,256,60))
         pixel_overlay("THR_Mean","THR_Mean_DER","THR Mean",["Fit","Der"],np.linspace(-24,256,60))
-        pixel_overlay("CAL_Mean_pretrim","CAL_Mean_pretrim_DER","CAL Mean (pretrim)",["Fit","Der"],np.linspace(-24,256,60))
-        pixel_overlay("THR_Mean_pretrim","THR_Mean_pretrim_DER","THR Mean (pretrim)",["Fit","Der"],np.linspace(-24,256,60))
+#        pixel_overlay("CAL_Mean_pretrim","CAL_Mean_pretrim_DER","CAL Mean (pretrim)",["Fit","Der"],np.linspace(-24,256,60))
+#        pixel_overlay("THR_Mean_pretrim","THR_Mean_pretrim_DER","THR Mean (pretrim)",["Fit","Der"],np.linspace(-24,256,60))
         
         pixel_overlay("CAL_RMS","CAL_RMS_DER","CAL RMS",["Fit","Der"],np.linspace(-2,10,60))
         pixel_overlay("THR_RMS","THR_RMS_DER","THR RMS",["Fit","Der"],np.linspace(-2,10,60))
-        pixel_overlay("CAL_RMS_pretrim","CAL_RMS_pretrim_DER","CAL RMS (pretrim)",["Fit","Der"],np.linspace(-2,10,60))
-        pixel_overlay("THR_RMS_pretrim","THR_RMS_pretrim_DER","THR RMS (pretrim)",["Fit","Der"],np.linspace(-2,10,60))
+#        pixel_overlay("CAL_RMS_pretrim","CAL_RMS_pretrim_DER","CAL RMS (pretrim)",["Fit","Der"],np.linspace(-2,10,60))
+#        pixel_overlay("THR_RMS_pretrim","THR_RMS_pretrim_DER","THR RMS (pretrim)",["Fit","Der"],np.linspace(-2,10,60))
         
     pixel_map("pa","dead/inefficient pixels")
     pixel_map("mask","unmaskable pixels")
     pixel_map("CAL_RMS","Average noise (CAL)")
     pixel_map("THR_RMS","Average noise (THR)")  
-    pixel_map("Bump_RMS","Average noise (CAL, BV=-2V)")
+#    pixel_map("Bump_RMS","Average noise (CAL, BV=-2V)")
 
 if __name__ == "__main__":
     main()

@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pickle
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 from derivative import *
 import MakeModulePlots
@@ -44,18 +45,19 @@ class MPA:
         self.directory = '../Results_MPATesting/' + mapsa_name + '/'
 
         cmd = 'ls '+ self.directory +'log*_'+ str(self.index) +'_*.log'
+
         self.log_file = get_recent(cmd)
 
-        self.fill_pixels()
-        self.add_derivative()
-
-        if scurves:
-            print("Saving s-curves")
-            self.set_Scurves()
+        if self.log_file == '0':
+            print("Chip "+str(self.index)+" was not tested. Skipping")
         else:
-            self.set_currents()
-#            self.set_memerrs()
-#            self.set_regerrs()
+            self.fill_pixels()
+            self.add_derivative()
+
+            if scurves:
+                print("Saving s-curves")
+                self.set_Scurves()
+                self.set_currents()
 
     def set_currents(self):
 
@@ -175,6 +177,7 @@ class MPA:
     def fill_pixels(self):
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_'+ str(self.index) + '_*_pixelalive.csv'
+        
         self.pixels = pd.read_csv(get_recent(cmd),index_col=0,header=0)
         self.pixels.columns = ['pa']
 
@@ -365,6 +368,17 @@ class MaPSA:
         df["I"] = Ipoints
         self.IV = df
 
+        fig = plt.figure(figsize=(10,5))
+        plt.scatter(x=df["V"],y=df["I"])
+        plt.xlabel("V [V]")
+        plt.ylabel("I [uA]")
+        plt.suptitle(self.name)
+
+        if not os.path.exists("./plots/"+self.label):
+            os.mkdir("./plots/"+self.label)
+        fig.savefig("./plots/"+self.label+"/ScanIV_"+self.label+".png")
+        fig.savefig("./plots/"+self.label+"/ScanIV_"+self.label+".pdf")
+
         return 
 
 def main():
@@ -393,13 +407,13 @@ def main():
 
         # Read MaPSA object from file, if available
         fname = 'pickles/'+mapsa_labels[i]+'.pkl'
-        if os.path.isfile(fname):
-            print("Loading MaPSA " + mapsa_labels[i])
-            mapsa = pickle.load(open(fname,'rb'))
-        else: # Create it
-            mapsa = MaPSA(mapsa_names[i],mapsa_labels[i],scurves)
-
-        mapsas += [mapsa]
+#        if os.path.isfile(fname):
+#            print("Loading MaPSA " + mapsa_labels[i])
+#            mapsa = pickle.load(open(fname,'rb'))
+#        else: # Create it
+        if not os.path.isfile(fname):
+           mapsa = MaPSA(mapsa_names[i],mapsa_labels[i],scurves)
+           mapsas += [mapsa]
 
     name = args.name[0]
 
