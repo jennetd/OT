@@ -126,11 +126,13 @@ def MakeModulePlot(arrays_of_data= [ [] ], row = [],col = [],nfig=5,hmin=-1,hmax
         print("A module consists out of 16 MPAs, not "+str(len(arrays_of_data))+"!")
         return
     nmpa = 0
-    for data in arrays_of_data:
+    for i,data in enumerate(arrays_of_data):
         if len(data)!=1888:
             print("MPA"+str(nmpa)+" consists out of 1888 pixels, not "+str(len(data))+"!")
-            return
+            arrays_of_data[i] = loadValuesFromCSV('./dummy.csv')
+
         nmpa += 1
+
     print("Plotting "+test_label+" for "+identifier)
     if len(row)==0:
         row = range(0,conf.nrowsnom+1)   
@@ -169,6 +171,8 @@ def MakeModulePlot(arrays_of_data= [ [] ], row = [],col = [],nfig=5,hmin=-1,hmax
     targetMinValue = wa_sorted[indexpos+precentilepos]*0.75
     targetMaxValue = wa_sorted[-precentilepos]*1.25
     maximum = hmax if hmax >=0 else max(0,targetMaxValue)
+    if "mask" in test_label:
+        maximum = 2
     minimum = hmin if hmin >=0 else max(0,targetMinValue)
     if plotAverage and hmax<0 and hmin<0:
 #        print ("Plotting average")
@@ -184,6 +188,7 @@ def MakeModulePlot(arrays_of_data= [ [] ], row = [],col = [],nfig=5,hmin=-1,hmax
     plt.hist2d(x,y,weights=w,bins=[picx,picy],cmin=minimum,cmax=maximum,range=[[0,picx],[0,picy] ] )
     cbar = plt.colorbar()
     cbar.set_label(data_label,fontweight='bold',labelpad=15)
+
     #now start hard-coding stuff for visualization of a MaPSA
     #axy.set_xlabel(xlabel)
     axy.set_xticks([0,60,119,179,238,298,357,417,476,536,595,655,714,774,833,893,951])
@@ -246,6 +251,9 @@ def ModulePlot(inputs,isscurve=False,s_type="THR",n_pulse=1000,nominal_DAC=-1,do
             else:      data_arrays.append(rms_temp)
         else:
             data_temp = loadValuesFromCSV(i)
+            if "mask" in test_label:
+                data_temp = np.clip(data_temp, 0 , 1)
+
             data_arrays.append(data_temp)
         #return
     MakeModulePlot(arrays_of_data= data_arrays, row = [],col = [],nfig=17,hmin=hmin,hmax=hmax, percentile = percentile, plotAverage = plotAverage, identifier=identifier, data_label=data_label, test_label=test_label, israw = False, filename=filename, show_plot=show_plot, save_plot=save_plot)
@@ -259,9 +267,7 @@ def Plot_Module(inpath="./",mapsa="MaPSA",base="pixelalive",chips=[],isscurve=Fa
     inputs = []
     for m in chips:
         cmd = 'ls '+ inpath + mapsa + '_' + m + '_*_'+base + '.csv'
-        print(m)
         the_file = get_recent(cmd)
-        print(the_file)
         if the_file != '0':
             inputs.append(get_recent(cmd))
         else:
