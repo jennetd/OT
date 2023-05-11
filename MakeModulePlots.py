@@ -252,7 +252,7 @@ def ModulePlot(inputs,isscurve=False,s_type="THR",n_pulse=1000,nominal_DAC=-1,do
         else:
             data_temp = loadValuesFromCSV(i)
             if "mask" in test_label:
-                data_temp = np.clip(data_temp, 0 , 1)
+                data_temp = np.minimum(data_temp, 1)
 
             data_arrays.append(data_temp)
         #return
