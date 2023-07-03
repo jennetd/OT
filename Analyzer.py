@@ -82,11 +82,6 @@ class Analyzer:
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(maskfile,'Unmaskable'))
             NUnmaskable += self.fResult.getResultValue([moduleName,chipName,'NUnmaskablePix'])
 
-            # Trim
-#            trimfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_Trim_trimbits.csv', chipName)
-#            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(trimfile,'Offset'))
-            # number of untrimmable
-
             # Noise and Pedestal
             noisefile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_PostTrim_CAL_CAL_RMS.csv', chipSearchString)
             self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(noisefile,'Noise'))
@@ -113,7 +108,6 @@ class Analyzer:
 
 #        IVData = self.getIVScan(testDir + '/IVScan_'+moduleName+'.csv')
 #        self.fResult.updateResult([moduleName,'Iat600V'],np.array(IVData[IVData['V']==-600]['I'])[0])
-
 
     def getCurrent(self, logfile, varname, tag):
         returnDict = {}

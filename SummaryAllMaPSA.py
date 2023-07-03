@@ -38,15 +38,15 @@ def IV_plot():
     fig, ax = plt.subplots(figsize=(8,6))
     for m in mapsas:
         if m.name in ['QuikPak_PS-p-P1_kapton','QuikPak_PS-p-P1_4_kapton','QuikPak_PS-p-P2','QuikPak_PS-p-P2_4_kapton']:
-            ax.plot(m.IV["V"],m.IV["I"],color='orange')
+            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='orange')
         elif m.IV["I"][60] < -10:
-            ax.plot(m.IV["V"],m.IV["I"],color='red')
+            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='red')
         else:
-            ax.plot(m.IV["V"],m.IV["I"],color='royalblue')
+            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='royalblue')
 
     ax.set_xlabel("$V$ [V]",fontweight='bold')
-    ax.set_ylabel("$I$ [uA]",fontweight='bold')
-    ax.set_ylim(-5,1)
+    ax.set_ylabel("$I$ [mA]",fontweight='bold')
+    ax.set_ylim(-1,5)
     plt.title(str(len(mapsas)) + " " + vendor +" MaPSAs",fontweight='bold')
 
     plt.tight_layout()
@@ -187,19 +187,23 @@ def current_plot():
     I['tot'] = [[],[]]
 
     Inames = {}
-    Inames['ana'] = "$I_{analog}$ [uA]"
-    Inames['dig'] = "$I_{digital}$ [uA]"
-    Inames['pad'] = "$I_{pad}$ [uA]"
-    Inames['tot'] = "$I_{total}$ [uA]"
+    Inames['ana'] = "$I_{analog}$ [mA]"
+    Inames['dig'] = "$I_{digital}$ [mA]"
+    Inames['pad'] = "$I_{pad}$ [mA]"
+    Inames['tot'] = "$I_{total}$ [mA]"
 
     nchips_good = 0
     nchips_bad = 0
 
-    minval = -10
+    minval = 0
     maxval = 1000
 
     for m in mapsas:
         for chip in m.mpa_chips:
+
+            if(chip.I_tot > 200):
+                print(m.name,chip.index)
+
             if chip.mapsa_name+"-"+str(chip.index) in badchips:
                 I['ana'][0] += [np.clip(chip.I_ana,minval,maxval)]
                 I['dig'][0] += [np.clip(chip.I_dig,minval,maxval)]
@@ -215,7 +219,7 @@ def current_plot():
 
     for c in I.keys():
 
-        bins = np.linspace(-10,1000,20)
+        bins = np.linspace(0,300,20)
 
         # Linear scale
         fig1 = stacked_hist(I[c][0],I[c][1],bins,Inames[c],"MPAs",logmax=0)
@@ -365,14 +369,25 @@ def pixel_map(var,ztitle):
 
             if var == "pa":
                 pixels["all"][chip.pixels[var]<100] += 1
+                pixels["all"][chip.pixels[var]>200] += 1
+                if np.any(chip.pixels[var]<100):
+                    print("inefficient",m.name)
+                if np.any(chip.pixels[var]>200):
+                    print("noisy",m.name)
+
             if var == "mask":
-                pixels["all"][abs(chip.pixels[var])>0] += 1
+                pixels["all"][chip.pixels[var]>0] += 1
+                if np.any(chip.pixels[var]>0):
+                    print("unmaskable",m.name)
+#                pixels["all"][abs(chip.pixels[var])<0] = 0
 
             if chip.mapsa_name+"-"+str(chip.index) not in badchips:
                 if var == "pa":
                     pixels["good"][chip.pixels[var]<100] += 1
+                    pixels["good"][chip.pixels[var]>200] += 1
                 if var == "mask":
-                    pixels["good"][abs(chip.pixels[var])>0] += 1
+                    pixels["good"][chip.pixels[var]>0] += 1
+#                    pixels["good"][abs(chip.pixels[var])<0] = 0
 
     x, y = np.meshgrid(np.linspace(0,117,118),np.linspace(0,15,16))
 
@@ -427,21 +442,29 @@ def main():
     outdir = name+"-plots"
     if name == "HPK":
         vendor = "Vendor 1"
-        infile = "round2tot-HPK.txt"
-    elif name == "HPKredclean":
-        vendor = "Vendor 1 (reduced cleaning)"
-        infile = "round2redclean-HPK.txt"
+        infile = "hpk-round3.txt"
+    elif name == "HPK-redclean":
+        vendor = "Vendor 1"
+        infile = "hpk-v1-redclean.txt"
     elif name == "QPT":
         vendor = "Vendor 2"     
-        infile = "round2abcde-QuikPak.txt"
+#        infile = "round2abcde-QuikPak.txt"
+    elif name == "AEM":
+        vendor = "Vendor 3"
+        infile = "aem-round3.txt"
+    elif name == "AEM-kapton":
+        vendor = "AEM (w kapton)"
+        infile = "aem-round3-kapton.txt"
     else:
         print("Invalid vendor name")
 
     # Load MaPSAs
     print('Reading MaPSA names from ' + infile)
+
     with open(infile) as f:
-        reader = csv.reader(f)
-        mapsa_names += [row[0] for row in reader]
+        reader = csv.reader(f,delimiter=' ')
+        mapsa_info = [row for row in reader]
+        mapsa_names = [row[1] for row in mapsa_info]
 
     for m in mapsa_names:
         fname = 'pickles/'+m+'.pkl'
@@ -449,22 +472,23 @@ def main():
             print("Loading MaPSA " + m)
             mapsa = cPickle.load(open(fname,'rb'))
         else: 
-            mapsa = MaPSA(m)
+#            mapsa = MaPSA(m)
+            print("Missing pickle for ", m)
+
         mapsas += [mapsa]
 
     # Make plots
     global badchips
-    badchips = []
-    badchips += ["HPK36_1-1","HPK36_1-11","HPK32_2-2","HPK32_2-3","HPK32_2-14"]
-    badchips += ["QP_no18p2-14","QP_no27p1-13","QP_no14-2","QP_no14-3","QP_N6T902b-3","QP_no24p1c-1",]
-
+    badchips = [""]
+    badchips += ["HPK_35494_002R-6","HPK_35494_002R-16","HPK_35494_005R-13"]
+    badchips += ["AEM_35494_002L-2","AEM_35494_002L-5","AEM_35494_002L-6","AEM_35494_002L-8","AEM_35494_002L-9","AEM_35494_002L-10"]
     global mycolors
     mycolors = ['silver','royalblue']
 
     IV_plot()
     current_plot()
-    memory_plot()
-    register_plot()
+#    memory_plot()
+#    register_plot()
 
     # Pixel plots
     global allpix
@@ -512,7 +536,7 @@ def main():
 
         pixel_plot("pa","Response to 100 pulses",np.linspace(-20,220,60))
         pixel_plot("mask","is unmaskable",np.linspace(-1.5,1.5,4))
-        pixel_plot("trimbits","Trim bits",np.linspace(-20,60,16))
+#        pixel_plot("trimbits","Trim bits",np.linspace(-20,60,16))
     
         # Threshold and noise
         pixel_plot("CAL_Mean","CAL mean",np.linspace(-24,256,60))
@@ -529,47 +553,18 @@ def main():
         
         pixel_plot("Bump_RMS","Bump test noise at -2V",np.linspace(-2,10,60))
         
-        pixel_plot("CAL_Mean_DER","CAL mean (der method)",np.linspace(-24,256,60))
-        pixel_plot("CAL_RMS_DER","CAL noise (der method)",np.linspace(-2,10,60))
-        
-        pixel_plot("THR_Mean_DER","THR mean (der method)",np.linspace(-24,256,60))
-        pixel_plot("THR_RMS_DER","THR noise (der method)",np.linspace(-2,10,60))
-        
-        pixel_plot("CAL_Mean_pretrim_DER","CAL mean (pretrim, der method)",np.linspace(-24,256,60))
-        pixel_plot("CAL_RMS_pretrim_DER","CAL noise (pretrim, der method)",np.linspace(-2,10,60))
-        
-        pixel_plot("THR_Mean_pretrim_DER","THR mean (pretrim, der method)",np.linspace(-24,256,60))
-        pixel_plot("THR_RMS_pretrim_DER","THR noise (pretrim, der method)",np.linspace(-2,10,60))
-        
-        pixel_plot("Bump_RMS_DER","Bump test noise at -2V (der method)",np.linspace(-2,10,60))
-
     if 1: # overlay plots
 
         pixel_overlay("CAL_Mean","CAL_Mean_pretrim","CAL Mean",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
         pixel_overlay("THR_Mean","THR_Mean_pretrim","THR Mean",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
-        pixel_overlay("CAL_Mean_DER","CAL_Mean_pretrim_DER","CAL Mean (der method)",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
-        pixel_overlay("THR_Mean_DER","THR_Mean_pretrim_DER","THR Mean (der method)",["Post-trim","Pre-trim"],np.linspace(-24,256,60))
         
         pixel_overlay("CAL_RMS","CAL_RMS_pretrim","CAL RMS",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
         pixel_overlay("THR_RMS","THR_RMS_pretrim","THR RMS",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
-        pixel_overlay("CAL_RMS_DER","CAL_RMS_pretrim_DER","CAL RMS (der method)",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
-        pixel_overlay("THR_RMS_DER","THR_RMS_pretrim_DER","THR RMS (der method)",["Post-trim","Pre-trim"],np.linspace(-2,10,60))
-        
-        pixel_overlay("CAL_Mean","CAL_Mean_DER","CAL Mean",["Fit","Der"],np.linspace(-24,256,60))
-        pixel_overlay("THR_Mean","THR_Mean_DER","THR Mean",["Fit","Der"],np.linspace(-24,256,60))
-        pixel_overlay("CAL_Mean_pretrim","CAL_Mean_pretrim_DER","CAL Mean (pretrim)",["Fit","Der"],np.linspace(-24,256,60))
-        pixel_overlay("THR_Mean_pretrim","THR_Mean_pretrim_DER","THR Mean (pretrim)",["Fit","Der"],np.linspace(-24,256,60))
-        
-        pixel_overlay("CAL_RMS","CAL_RMS_DER","CAL RMS",["Fit","Der"],np.linspace(-2,10,60))
-        pixel_overlay("THR_RMS","THR_RMS_DER","THR RMS",["Fit","Der"],np.linspace(-2,10,60))
-        pixel_overlay("CAL_RMS_pretrim","CAL_RMS_pretrim_DER","CAL RMS (pretrim)",["Fit","Der"],np.linspace(-2,10,60))
-        pixel_overlay("THR_RMS_pretrim","THR_RMS_pretrim_DER","THR RMS (pretrim)",["Fit","Der"],np.linspace(-2,10,60))
-        
-    pixel_map("pa","dead/inefficient pixels")
+                
+    pixel_map("pa","dead/inefficient/noisy pixels")
     pixel_map("mask","unmaskable pixels")
     pixel_map("CAL_RMS","Average noise (CAL)")
     pixel_map("THR_RMS","Average noise (THR)")  
-    pixel_map("Bump_RMS","Average noise (CAL, BV=-2V)")
 
 if __name__ == "__main__":
     main()
