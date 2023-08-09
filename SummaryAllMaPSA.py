@@ -434,27 +434,21 @@ def main():
 
     # Select vendor
     parser = argparse.ArgumentParser(description='MaPSA summary plots')
-    parser.add_argument('-n','--name',nargs='+',help='vendor name')
+    parser.add_argument('-f','--file',nargs='+',help='vendor name')
     args = parser.parse_args()
 
-    name = args.name[0]
-    print(name)
+    infile = args.file[0]
+    name = infile.split('.txt')[0]
     outdir = name+"-plots"
+
     if name == "HPK":
         vendor = "Vendor 1"
-        infile = "hpk-round3.txt"
-    elif name == "HPK-redclean":
-        vendor = "Vendor 1"
-        infile = "hpk-v1-redclean.txt"
     elif name == "QPT":
         vendor = "Vendor 2"     
-#        infile = "round2abcde-QuikPak.txt"
     elif name == "AEM":
         vendor = "Vendor 3"
-        infile = "aem-round3.txt"
-    elif name == "AEM-kapton":
-        vendor = "AEM (w kapton)"
-        infile = "aem-round3-kapton.txt"
+    elif name == "qpt1":
+        vendor = "QPT"
     else:
         print("Invalid vendor name")
 

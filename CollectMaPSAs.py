@@ -326,7 +326,7 @@ class MaPSA:
 def main():
 
     parser = argparse.ArgumentParser(description='MaPSA summary plots')
-    parser.add_argument('-n','--name',nargs='+',help='name of output directory')
+#    parser.add_argument('-n','--name',nargs='+',help='name of output directory')
     parser.add_argument('-f','--files',nargs='+',help='list of text files containing names of MaPSAs to process')
     args = parser.parse_args()
 
@@ -357,7 +357,7 @@ def main():
            mapsa = MaPSA(mapsa_names[i],mapsa_labels[i],scurves)
            mapsas += [mapsa]
 
-    name = args.name[0]
+#    name = args.name[0]
 
 if __name__ == "__main__":
     main()

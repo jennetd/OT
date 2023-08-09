@@ -7,23 +7,21 @@ Code for analyzing MaPSA test results (forked from Hannsjoerg's repo at https://
 Note:
 All code assumes that test results for MaPSA $mapsaname are stored in ../Results_MPATesting/$mapsaname. 
 
-Plot test results of single MaPSA:
-
-python MakeModulePlots_old.py $mapsaname
-
-This draws 2D plots showing noise mean and RMS (THR and CAL), bad bump tests, 
-pixel alive, and masking test as a function of pixel position on the MaPSA. 
-Results are saved in ../Results_MPATesting/$mapsaname
-
 Plot summary of many MaPSAs:
-First create directory pickles to hold pickled objects
+First create directories plots/ and pickles/
 
-python CollectMaPSAs.py -n $outputdir -f $inputfile
+Put the MaPSAs you want to draw plots for in a text file with two columns. The first column should contain the name corresponding to the input data in ../Results_MPATesting/$mapsaname, and the second should contain the name you would like printed on the plots. 
 
-where $inputfile contains the list of MaPSAs to run over. 
+```
+python CollectMaPSAs.py -f $inputfile
+```
 
-The first part of this script reads the test results for each MaPSA and save them in a pickled object. If the pickled object for a MaPSA already exists, it is read in rather than recreated to save time.
+This creates the 2D pixel maps for each MaPSA and saves them in plots/$mapsaname/
 
-The second part of this script creates summary plots for the MaPSAs in $inputfile. Results are saved in $outputdir
+To draw the plots summarizing the performance of all MaPSAs in $inputfile, do
+
+```
+python SummaryAllMaPSA.py -n $inputfile
+```
 
 
