@@ -37,16 +37,14 @@ def IV_plot():
 
     fig, ax = plt.subplots(figsize=(8,6))
     for m in mapsas:
-        if m.name in ['QuikPak_PS-p-P1_kapton','QuikPak_PS-p-P1_4_kapton','QuikPak_PS-p-P2','QuikPak_PS-p-P2_4_kapton']:
-            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='orange')
-        elif m.IV["I"][60] < -10:
+        if m.IV["I"][60] > 10:
             ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='red')
         else:
             ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='royalblue')
 
     ax.set_xlabel("$V$ [V]",fontweight='bold')
     ax.set_ylabel("$I$ [mA]",fontweight='bold')
-    ax.set_ylim(-1,5)
+    ax.set_ylim(-1,10)
     plt.title(str(len(mapsas)) + " " + vendor +" MaPSAs",fontweight='bold')
 
     plt.tight_layout()
@@ -447,7 +445,7 @@ def main():
         vendor = "Vendor 2"     
     elif name == "AEM":
         vendor = "Vendor 3"
-    elif name == "qpt1":
+    elif "qpt" in name:
         vendor = "QPT"
     else:
         print("Invalid vendor name")

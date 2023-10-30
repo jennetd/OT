@@ -296,8 +296,6 @@ class MaPSA:
                 if row[0] == '':
                     continue
 
-                print(row)
-
                 if(float(row[-1]) !=0 ):
                     Vpoints += [float(row[len(row)-2])]
                     Ipoints += [float(row[-1])]
