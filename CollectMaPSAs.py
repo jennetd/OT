@@ -45,6 +45,8 @@ class MPA:
         self.directory = '../Results_MPATesting/' + mapsa_name + '/'
 
         self.log_file = log_file
+
+        self.serial_number = self.serial_number()
         self.fill_pixels()
         self.set_currents()
         #            self.add_derivative()
@@ -53,6 +55,38 @@ class MPA:
             print("Saving s-curves")
             self.set_Scurves()
 
+    def serial_number(self):
+        if len(self.log_file) <= 1:
+            return -1
+
+        cmd = "grep \"Serial Number\" " + self.log_file
+        number = os.popen(cmd).read()
+
+        if "(" in number and ")" in number:
+
+            number = number.split("(")[1].split(")")[0]
+
+            pos, wafer_n, lot, status, process, adc_ref = number.split(",")
+
+            val = int(pos)
+            val += (2**8)*int(wafer_n)
+            val += (2**13)*int(lot)
+            val += (2**20)*int(status)
+            val += (2**22)*int(process)
+            val += (2**27)*int(adc_ref)
+
+            pos =val & 0xFF
+            wafer_n =(val >> 8) & 0x1F
+            lot =(val >> 13) & 0x7F
+            status =(val >> 20) & 0x3 
+            process =(val >> 22) & 0x1F 
+            adc_ref =(val >> 27) & 0x1F 
+
+            return val
+
+        else:
+            return int(number.split("=")[1])
+        
     def set_currents(self):
 
         if len(self.log_file) <= 1:
@@ -244,11 +278,12 @@ class MPA:
 
 class MaPSA:
     """MaPSA class"""
-    def __init__(self, name, label, scurves=False):
+    def __init__(self, name, label, kapton, scurves=False):
 
         # Set some properties
         self.name = name
         self.label = label
+        self.kapton = kapton
         self.directory = '../Results_MPATesting/' + self.name + '/'
         self.mpa_chips = []
         self.set_IV()
@@ -267,7 +302,7 @@ class MaPSA:
         # Pickle it
         print("Pickling MaPSA " + self.name)
         mapsafile = open('pickles/'+self.label+'.pkl', 'wb')
-        pickle.dump(self, mapsafile, protocol=-1)
+        pickle.dump(self, mapsafile)
         mapsafile.close()
 
         MakeModulePlots.PlotAllPlotsModulesAutomated(self.name,mapsaname=self.label,show_plot=False,save_plot=True)
@@ -330,6 +365,7 @@ def main():
 
     mapsa_names = []
     mapsa_labels = []
+    kapton = []
     mapsas = []
     
     for f1 in args.files:
@@ -339,6 +375,8 @@ def main():
             mapsa_info = [row for row in reader]
             mapsa_names = [row[0] for row in mapsa_info]
             mapsa_labels = [row[1] for row in mapsa_info]
+            kapton = [row[2] for row in mapsa_info]
+
     print(mapsa_labels)
 
     scurves = True
@@ -352,7 +390,7 @@ def main():
 #            mapsa = pickle.load(open(fname,'rb'))
 #        else: # Create it
         if not os.path.isfile(fname):
-           mapsa = MaPSA(mapsa_names[i],mapsa_labels[i],scurves)
+           mapsa = MaPSA(mapsa_names[i],mapsa_labels[i],kapton[i],scurves)
            mapsas += [mapsa]
 
 #    name = args.name[0]

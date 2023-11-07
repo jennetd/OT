@@ -1,4 +1,6 @@
 import Result
+from CollectMaPSAs import MaPSA
+import pickle
 import os, sys
 import numpy as np
 import pandas as pd
@@ -15,79 +17,56 @@ class Analyzer:
     def getResult(self):
         return self.fResult
 
-    def getRecentFile(self, filestring, name):
-
-        files = os.popen('ls '+filestring).read().split()
-
-        if len(files) < 1:
-            print("Error: no files specified")
-            return "0"
-
-        elif len(files) == 1:
-            return files[0]
-
-        else:
-            latestFileIndex = -1
-            datetimeLatest = datetime.strptime('2000_01_01_01_00_00', '%Y_%m_%d_%H_%M_%S')
-
-            for j, f in enumerate(files):
-
-                dateString = f.split(name)[-1][1:20]
-                datetimeObject = datetime.strptime(dateString, '%Y_%m_%d_%H_%M_%S')
-
-                if datetimeObject > datetimeLatest:
-                    latestFileIndex = j 
-            return files[latestFileIndex]
-
-    def analyze(self, testDir, moduleName):
+    def analyze(self, moduleName):
 
         self.fResult.updateResult([moduleName],{})
-        print(self.fResult)
-
-        logfilesAllChips = []
+        
+        fname = 'pickles/'+moduleName+'.pkl'
+        if os.path.isfile(fname):
+            print("Loading MaPSA " + moduleName)
+            mapsafile = open(fname, 'rb')
+            mapsa = pickle.load(mapsafile)
+            mapsafile.close()
 
         NAbnormalCurrent = 0
         NUnmaskable = 0
         NNonOperational = 0
-        NNonOperationalPerChip = ""
 
-        for i in range(1,17):
+        mpa_grades = []
+ 
+        for chip in mapsa.mpa_chips:
 
-            chipName = str(i)
-            chipSearchString = moduleName + "_" + str(i)
+            chipName = chip.index
 
-            print(chipName)
-            logfile = self.getRecentFile(testDir + '/log*_' + chipSearchString + '_*.log', chipSearchString)
-            logfilesAllChips += [logfile]
+            self.fResult.updateResult([moduleName,chipName],{'serial_number':chip.serial_number})
 
-            # Current draw
-            self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Ianalog','P_ana'))
-            self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Idigital','P_dig'))
-            self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Ipad','P_pad'))
-            self.fResult.updateResult([moduleName,chipName],self.getCurrent(logfile,'Itotal','Total: '))
+            # Current analysis
+            self.fResult.updateResult([moduleName,chipName],{'I_ana':chip.I_ana})
+            self.fResult.updateResult([moduleName,chipName],{'I_dig':chip.I_dig})
+            self.fResult.updateResult([moduleName,chipName],{'I_pad':chip.I_pad})
+            self.fResult.updateResult([moduleName,chipName],{'I_tot':chip.I_tot})
             
-            itotal = 200 #self.fResult.getResultValue([moduleName,chipName,'Itotal']) 
+            itotal = chip.I_tot
             if itotal > 250 or itotal < 150:
                 NAbnormalCurrent += 1
+                Itot_Grade = 'C'
+            else:
+                Itot_Grade = 'A'
 
-            # Pixel alive
-            # number and list of dead, ineffient, noisy
-            pafile = self.getRecentFile(testDir + '/mpa_test_'+ chipSearchString + '_*_pixelalive.csv', chipSearchString)
-            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Dead'))
-            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Inefficient'))
-            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Noisy'))
+            # Pixel analysis
+            chipdata = chip.pixels
+                            
+            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(chipdata,'Dead'))
+            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(chipdata,'Inefficient'))
+            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(chipdata,'Noisy'))
 
             # Mask
-            maskfile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_mask_test.csv', chipSearchString)
-            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(maskfile,'Unmaskable'))
+            self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(chipdata,'Unmaskable'))
             NUnmaskable += self.fResult.getResultValue([moduleName,chipName,'NUnmaskablePix'])
 
             # Noise and Pedestal
-            noisefile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_PostTrim_CAL_CAL_RMS.csv', chipSearchString)
-            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(noisefile,'Noise'))
-
-            pedestalfile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_PostTrim_CAL_CAL_Mean.csv', chipSearchString)
-            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(pedestalfile,'Pedestal'))
+#            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(chipdata,'Noise'))
+#            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(chipdata,'Pedestal'))
 
             # Bad bumps
             # number and list of bad bumps
@@ -97,54 +76,74 @@ class Analyzer:
                 nonOperational += self.fResult.getResultValue([moduleName,chipName,variable]).split(',')[:-1]
             
             nonOperational = np.unique(nonOperational)
-            self.fResult.updateResult([moduleName,chipName],dict({'NNonOperational':len(nonOperational)}))
+            self.fResult.updateResult([moduleName,chipName,'NNonOperational'],len(nonOperational))
             NNonOperational += len(nonOperational)
-            NNonOperationalPerChip += str(len(nonOperational))+','
 
-        self.fResult.updateResult([moduleName,'NAbnormalCurrentChips'],NAbnormalCurrent)
+            if len(nonOperational) < 19:
+                Pix_Grade = 'A'
+            elif len(nonOperational) >= 19 and len(nonOperational) <= 94:
+                Pix_Grade = 'B'
+            elif len(nonOperational) > 94:
+                Pix_Grade = 'C'
+                
+            # Any unmaskable = grade C
+            if self.fResult.getResultValue([moduleName,chipName,'NUnmaskablePix']) !=0:
+                Pix_Grade = 'C'
+
+            MPA_Grade = max(Itot_Grade,Pix_Grade)
+            mpa_grades += [MPA_Grade]
+
+            print("MPA " +str(chipName)+ " Grade",MPA_Grade)
+
+            # Set the grades
+            self.fResult.updateResult([moduleName,chipName],{'Itot_Grade':Itot_Grade,'Pix_Grade':Pix_Grade,'MPA_Grade':MPA_Grade})
+
+
+        self.fResult.updateResult([moduleName,'kapton'],mapsa.kapton)
+        self.fResult.updateResult([moduleName,'NAbnormalCurrent'],NAbnormalCurrent)
         self.fResult.updateResult([moduleName,'NUnmaskablePix'],NUnmaskable)
         self.fResult.updateResult([moduleName,'NNonOperationalPix'],NNonOperational)
-        self.fResult.updateResult([moduleName,'NNonOperationalPixPerChip'],NNonOperationalPerChip)
-
-#        IVData = self.getIVScan(testDir + '/IVScan_'+moduleName+'.csv')
-#        self.fResult.updateResult([moduleName,'Iat600V'],np.array(IVData[IVData['V']==-600]['I'])[0])
-
-    def getCurrent(self, logfile, varname, tag):
-        returnDict = {}
-        if len(logfile) <= 1:
-            return returnDict
-
-        cmd = "grep " + tag + " " + logfile
-        x = os.popen(cmd).read()
-        x = x.replace('I= ', 'CUT')
-        x = x.replace(' mA', 'CUT')
-        y = x.split('CUT')
-        I = float(y[1])
-
-        # Add it to the dict
-        returnDict[varname] = I
-        return returnDict
         
+        IVData = mapsa.IV.astype(float)
+        at800 = IVData[abs(IVData['V']) == 800.0]
+        Iat800 = abs(at800['I'].iloc[0])
+
+        if Iat800 > 10.0:
+           IV_Grade = 'C'
+        elif Iat800 > 1.0:
+           IV_Grade = 'B'
+        else:
+           IV_Grade = 'A'
+        self.fResult.updateResult([moduleName,'IV_Grade'],IV_Grade)
+
+        # Rework candidate?
+        C_counts = mpa_grades.count('C')
+        
+        if C_counts in (1,2,3) and IV_Grade == 'A':
+            self.fResult.updateResult([moduleName,'Rework'],'Yes')
+        else:
+            self.fResult.updateResult([moduleName,'Rework'],'No')
+            
+        MaPSA_Grade = max(max(mpa_grades), IV_Grade)
+        self.fResult.updateResult([moduleName,'Total_Grade'],MaPSA_Grade)
+
+        print('Total MaPSA Grade', MaPSA_Grade)
+
     # Description
-    def getNumberAndList(self, datafile, varname, threshold=5):
+    def getNumberAndList(self, data, varname, threshold=5):
         returnDict = {}
-
-        if len(datafile) <= 1:
-            return returnDict
-
-        data = np.genfromtxt(datafile, delimiter=',')[:,1][1:]
 
         if varname == 'Dead':
-            indices = np.where(data==0)[0]
+            indices = np.where(data['pa']==0)[0]
             
         elif varname == "Inefficient":
-            indices = np.where((data<100) & (data>0))[0]
+            indices = np.where((data['pa']<100) & (data['pa']>0))[0]
 
         elif varname == "Noisy":
-            indices = np.where((data>100))[0]
+            indices = np.where((data['pa']>300))[0]
 
         elif varname == "Unmaskable":
-            indices = np.where(data > 0)[0]
+            indices = np.where(data['mask'] > 0)[0]
 
         pixelString = ""
         for i in indices:
@@ -171,7 +170,7 @@ class Analyzer:
         returnDict[varname+"Mean"] = mean
         returnDict[varname+"Std"] = std
         
-        # calculate outliers                                                                                                            
+        # calculate outliers                                                                                                  
         outliersHigh = []
         outliersLow = []
         for i, d in enumerate(data):
@@ -194,8 +193,3 @@ class Analyzer:
 
         return returnDict
         
-    # Extract useful info about the IV scan
-    def getIVScan(self, IVFile):
-
-        return pd.read_csv(IVFile,delimiter='\t',header=None,names=['V','I'])
-

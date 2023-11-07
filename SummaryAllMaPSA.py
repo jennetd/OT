@@ -1,6 +1,5 @@
 from CollectMaPSAs import *
 import ROOT
-import cPickle
 import matplotlib.pyplot as plt
 
 plt.rc('font', size=18, weight='bold', family='sans-serif')
@@ -462,7 +461,8 @@ def main():
         fname = 'pickles/'+m+'.pkl'
         if os.path.isfile(fname):
             print("Loading MaPSA " + m)
-            mapsa = cPickle.load(open(fname,'rb'))
+            with open(fname, 'rb') as f:
+                mapsa = pickle.load(f)
         else: 
 #            mapsa = MaPSA(m)
             print("Missing pickle for ", m)
