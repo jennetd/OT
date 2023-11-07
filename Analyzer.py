@@ -93,7 +93,7 @@ class Analyzer:
             MPA_Grade = max(Itot_Grade,Pix_Grade)
             mpa_grades += [MPA_Grade]
 
-            print("MPA " +str(chipName)+ " Grade",MPA_Grade)
+#            print("MPA " +str(chipName)+ " Grade",MPA_Grade)
 
             # Set the grades
             self.fResult.updateResult([moduleName,chipName],{'Itot_Grade':Itot_Grade,'Pix_Grade':Pix_Grade,'MPA_Grade':MPA_Grade})
