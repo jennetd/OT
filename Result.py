@@ -8,7 +8,6 @@ class Result():
     def updateResult(self, keywords, value):
 
         thisDict = self.fResultDict
-
         for i,key in enumerate(keywords):
 
             # Loop down through levels of dictionary specified in keywords arg
@@ -34,6 +33,8 @@ class Result():
                 
     def getResultValue(self, keywords):
         theDict = self.fResultDict
-        for key in keywords:
+
+        for key in keywords:	
             theDict = theDict[key]
+
         return theDict
