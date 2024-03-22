@@ -244,7 +244,7 @@ class MPA:
 
 class MaPSA:
     """MaPSA class"""
-    def __init__(self, name, label, scurves=False):
+    def __init__(self, name, label, scurves=True):
 
         # Set some properties
         self.name = name
