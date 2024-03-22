@@ -15,7 +15,7 @@ class Analyzer:
     def getResult(self):
         return self.fResult
 
-    def getRecentFile(self, filestring, chipName):
+    def getRecentFile(self, filestring, name):
 
         files = os.popen('ls '+filestring).read().split()
 
@@ -29,8 +29,10 @@ class Analyzer:
         else:
             latestFileIndex = -1
             datetimeLatest = datetime.strptime('2000_01_01_01_00_00', '%Y_%m_%d_%H_%M_%S')
+
             for j, f in enumerate(files):
-                dateString = f.split(chipName)[-1][1:20]
+
+                dateString = f.split(name)[-1][1:20]
                 datetimeObject = datetime.strptime(dateString, '%Y_%m_%d_%H_%M_%S')
 
                 if datetimeObject > datetimeLatest:
@@ -51,8 +53,11 @@ class Analyzer:
 
         for i in range(1,17):
 
-            chipName = "Chip"+str(i)
-            logfile = self.getRecentFile(testDir + '/log*_' + chipName + '_*.log', chipName)
+            chipName = str(i)
+            chipSearchString = moduleName + "_" + str(i)
+
+            print(chipName)
+            logfile = self.getRecentFile(testDir + '/log*_' + chipSearchString + '_*.log', chipSearchString)
             logfilesAllChips += [logfile]
 
             # Current draw
@@ -67,26 +72,21 @@ class Analyzer:
 
             # Pixel alive
             # number and list of dead, ineffient, noisy
-            pafile = self.getRecentFile(testDir + '/mpa_test_*_'+ chipName + '_*_pixelalive.csv', chipName)
+            pafile = self.getRecentFile(testDir + '/mpa_test_'+ chipSearchString + '_*_pixelalive.csv', chipSearchString)
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Dead'))
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Inefficient'))
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(pafile,'Noisy'))
 
             # Mask
-            maskfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_mask_test.csv', chipName)
+            maskfile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_mask_test.csv', chipSearchString)
             self.fResult.updateResult([moduleName,chipName],self.getNumberAndList(maskfile,'Unmaskable'))
             NUnmaskable += self.fResult.getResultValue([moduleName,chipName,'NUnmaskablePix'])
 
-            # Trim
-            trimfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_Trim_trimbits.csv', chipName)
-            self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(trimfile,'Offset'))
-            # number of untrimmable
-
             # Noise and Pedestal
-            noisefile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_PostTrim_CAL_CAL_RMS.csv', chipName)
+            noisefile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_PostTrim_CAL_CAL_RMS.csv', chipSearchString)
             self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(noisefile,'Noise'))
 
-            pedestalfile = self.getRecentFile(testDir + '/mpa_test_*_' + chipName + '_*_PostTrim_CAL_CAL_Mean.csv', chipName)
+            pedestalfile = self.getRecentFile(testDir + '/mpa_test_' + chipSearchString + '_*_PostTrim_CAL_CAL_Mean.csv', chipSearchString)
             self.fResult.updateResult([moduleName,chipName],self.getMeanStdOutliers(pedestalfile,'Pedestal'))
 
             # Bad bumps
@@ -106,9 +106,8 @@ class Analyzer:
         self.fResult.updateResult([moduleName,'NNonOperationalPix'],NNonOperational)
         self.fResult.updateResult([moduleName,'NNonOperationalPixPerChip'],NNonOperationalPerChip)
 
-        IVData = self.getIVScan(testDir + '/IV.csv')
-        self.fResult.updateResult([moduleName,'Iat600V'],np.array(IVData[IVData['V']==-600]['I'])[0])
-
+#        IVData = self.getIVScan(testDir + '/IVScan_'+moduleName+'.csv')
+#        self.fResult.updateResult([moduleName,'Iat600V'],np.array(IVData[IVData['V']==-600]['I'])[0])
 
     def getCurrent(self, logfile, varname, tag):
         returnDict = {}

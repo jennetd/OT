@@ -1,8 +1,8 @@
 import os, sys
-import MakeModulePlots
+#import MakeModulePlots
 
 import Analyzer
-import Writer
+#import Writer
 
 def main():
 
@@ -17,14 +17,14 @@ def main():
     result = analyzer.getResult()
 
     # XML
-    print("Creating XML file for MaPSA "+name)
+#    print("Creating XML file for MaPSA "+name)
 
-    writer = Writer.Writer()
-    outputXML = "../XML/"+name+".xml"
-    writer.writeResultToXML (result, outputXML )
+#    writer = Writer.Writer()
+#    outputXML = "../XML/"+name+".xml"
+#    writer.writeResultToXML (result, outputXML )
     
     # Summary plots with Hannsjoerg's code
-    print("Drawing summary plots for MaPSA "+name)
+#    print("Drawing summary plots for MaPSA "+name)
 #    PlotAllPlotsModulesAutomated(name, show_plot=False, save_plot=True)
 
 
