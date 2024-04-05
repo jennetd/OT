@@ -36,13 +36,18 @@ def IV_plot():
 
     fig, ax = plt.subplots(figsize=(8,6))
     for m in mapsas:
-        if m.IV["I"][60] > 10:
-            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='red')
+        ls = '-'
+        if m.name in nokapton:
+            print(m.name)
+            ls = '--'
+
+        if abs(m.IV["I"][80]) > 10:
+            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),linestyle=ls,color='red')
         else:
-            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),color='royalblue')
+            ax.plot(abs(m.IV["V"]),abs(m.IV["I"]),linestyle=ls,color='royalblue')
 
     ax.set_xlabel("$V$ [V]",fontweight='bold')
-    ax.set_ylabel("$I$ [mA]",fontweight='bold')
+    ax.set_ylabel("$I$ [uA]",fontweight='bold')
     ax.set_ylim(-1,10)
     plt.title(str(len(mapsas)) + " " + vendor +" MaPSAs",fontweight='bold')
 
@@ -476,6 +481,9 @@ def main():
     badchips += ["AEM_35494_002L-2","AEM_35494_002L-5","AEM_35494_002L-6","AEM_35494_002L-8","AEM_35494_002L-9","AEM_35494_002L-10"]
     global mycolors
     mycolors = ['silver','royalblue']
+
+    global nokapton
+    nokapton = ["QPT_35501_039R", "QPT_35501_043R"]
 
     IV_plot()
     current_plot()
