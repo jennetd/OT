@@ -23,7 +23,7 @@ Open the plot with xdg-open $plotfile
 To draw the plots summarizing the performance of all MaPSAs in $inputfile, do
 
 ```
-python SummaryAllMaPSA.py -n $inputfile
+python SummaryAllMaPSA.py -f $inputfile
 ```
 
 

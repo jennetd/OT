@@ -354,6 +354,8 @@ class MaPSA:
         fig.savefig("./plots/"+self.label+"/ScanIV_"+self.label+".png")
         fig.savefig("./plots/"+self.label+"/ScanIV_"+self.label+".pdf")
 
+        plt.close()
+
         return 
 
 def main():
