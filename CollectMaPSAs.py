@@ -192,41 +192,41 @@ class MPA:
         else:
             self.pixels['THR_Mean'] = [-1]*1888
             
-        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
-        if len(get_recent(cmd)) > 1:
-            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-            self.pixels['CAL_RMS_pretrim'] = tmp['value']
-            self.pixels['CAL_RMS_pretrim'][abs(self.pixels['CAL_RMS_pretrim']-2.0)<0.00001] = -1
-            self.pixels['CAL_RMS_pretrim'][self.pixels['pa']<100] = np.nan
-        else:
-            self.pixels['CAL_RMS_pretrim'] = [-1]*1888
+#        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_CAL_CAL_RMS.csv'
+#        if len(get_recent(cmd)) > 1:
+#            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+#            self.pixels['CAL_RMS_pretrim'] = tmp['value']
+#            self.pixels['CAL_RMS_pretrim'][abs(self.pixels['CAL_RMS_pretrim']-2.0)<0.00001] = -1
+#            self.pixels['CAL_RMS_pretrim'][self.pixels['pa']<100] = np.nan
+#        else:
+#            self.pixels['CAL_RMS_pretrim'] = [-1]*1888
             
-        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
-        if len(get_recent(cmd)) > 1:
-            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-            self.pixels['CAL_Mean_pretrim'] = tmp['value']
-            self.pixels['CAL_Mean_pretrim'][self.pixels['CAL_RMS_pretrim']<0] = np.nan
-            self.pixels['CAL_Mean_pretrim'][self.pixels['pa']<100] = np.nan
-        else:
-            self.pixels['CAL_Mean_pretrim'] = [-1]*1888
+#        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_CAL_CAL_Mean.csv'
+#        if len(get_recent(cmd)) > 1:
+#            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+#            self.pixels['CAL_Mean_pretrim'] = tmp['value']
+#            self.pixels['CAL_Mean_pretrim'][self.pixels['CAL_RMS_pretrim']<0] = np.nan
+#            self.pixels['CAL_Mean_pretrim'][self.pixels['pa']<100] = np.nan
+#        else:
+#            self.pixels['CAL_Mean_pretrim'] = [-1]*1888
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
-        if len(get_recent(cmd)) > 1:
-            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-            self.pixels['THR_RMS_pretrim'] = tmp['value']
-            self.pixels['THR_RMS_pretrim'][abs(self.pixels['THR_RMS_pretrim']-2.0)<0.000001] = -1
-            self.pixels['THR_RMS_pretrim'][self.pixels['pa']<100] = np.nan
-        else:
-            self.pixels['THR_RMS_pretrim'] = [-1]*1888
+#        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_THR_THR_RMS.csv'
+#        if len(get_recent(cmd)) > 1:
+#            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+#            self.pixels['THR_RMS_pretrim'] = tmp['value']
+#            self.pixels['THR_RMS_pretrim'][abs(self.pixels['THR_RMS_pretrim']-2.0)<0.000001] = -1
+#            self.pixels['THR_RMS_pretrim'][self.pixels['pa']<100] = np.nan
+#        else:
+#            self.pixels['THR_RMS_pretrim'] = [-1]*1888
 
-        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
-        if len(get_recent(cmd)) > 1:
-            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
-            self.pixels['THR_Mean_pretrim'] = tmp['value']
-            self.pixels['THR_Mean_pretrim'][self.pixels['THR_RMS_pretrim']<0] = np.nan
-            self.pixels['THR_Mean_pretrim'][self.pixels['pa']<100] = np.nan
-        else:
-            self.pixels['THR_Mean_pretrim'] = [-1]*1888
+#        cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_PreTrim_THR_THR_Mean.csv'
+#        if len(get_recent(cmd)) > 1:
+#            tmp = pd.read_csv(get_recent(cmd),names=['index','value'],header=0)
+#            self.pixels['THR_Mean_pretrim'] = tmp['value']
+#            self.pixels['THR_Mean_pretrim'][self.pixels['THR_RMS_pretrim']<0] = np.nan
+#            self.pixels['THR_Mean_pretrim'][self.pixels['pa']<100] = np.nan
+#        else:
+#            self.pixels['THR_Mean_pretrim'] = [-1]*1888
 
         cmd = 'ls '+ self.directory + 'mpa_test_*_'+str(self.index) + '_*_BumpBonding_Noise_BadBump.csv'
         if len(get_recent(cmd)) > 1:
